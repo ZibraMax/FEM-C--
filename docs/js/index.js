@@ -158,7 +158,7 @@ function main() {
 	render();
 }
 
-fetch("../resources/geometry.json")
+fetch("./resources/geometry.json")
 	.then((response) => {
 		return response.json();
 	})
