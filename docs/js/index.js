@@ -3,10 +3,12 @@ import GUI from "https://cdn.jsdelivr.net/npm/lil-gui@0.16/+esm";
 import { OBJLoader } from "./OBJLoader.js";
 import { OrbitControls } from "./OrbitControls.js";
 import * as BufferGeometryUtils from "./BufferGeometryUtils.js";
+import { AxisGridHelper, MinMaxGUIHelper, ColorGUIHelper } from "./minigui.js";
 const nodes = [];
 const prisms = [];
 const geometries = [];
 const gui = new GUI();
+
 function resizeRendererToDisplaySize(renderer) {
 	const canvas = renderer.domElement;
 	const width = canvas.clientWidth;
@@ -18,42 +20,28 @@ function resizeRendererToDisplaySize(renderer) {
 	return needResize;
 }
 
-class AxisGridHelper {
-	constructor(node, units = 10) {
-		const axes = new THREE.AxesHelper();
-		axes.material.depthTest = false;
-		axes.renderOrder = 2; // after the grid
-		node.add(axes);
-
-		const grid = new THREE.GridHelper(units, units);
-		grid.material.depthTest = false;
-		grid.renderOrder = 1;
-		grid.rotateX(Math.PI / 2);
-		node.add(grid);
-
-		this.grid = grid;
-		this.axes = axes;
-		this.visible = true;
-	}
-	get visible() {
-		return this._visible;
-	}
-	set visible(v) {
-		this._visible = v;
-		this.grid.visible = v;
-		this.axes.visible = v;
-	}
-}
-
 function makeAxisGrid(node, label, units) {
 	const helper = new AxisGridHelper(node, units);
 	gui.add(helper, "visible").name(label);
 }
+
+function makeXYZGUI(gui, vector3, name, onChangeFn) {
+	const folder = gui.addFolder(name);
+	folder.add(vector3, "x", -100, 100).onChange(onChangeFn);
+	folder.add(vector3, "y", -100, 100).onChange(onChangeFn);
+	folder.add(vector3, "z", -100, 100).onChange(onChangeFn);
+	folder.open();
+}
+
 function main() {
 	function makeInstance(geometry, matProps) {
 		const material = new THREE.MeshLambertMaterial(matProps);
 		const mesh = new THREE.Mesh(geometry, material);
 		return mesh;
+	}
+	function updateCamera() {
+		camera.updateProjectionMatrix();
+		render();
 	}
 
 	function bufferGeometry(geometry) {
@@ -64,24 +52,29 @@ function main() {
 
 	// Conectar con el HTML
 	const canvas = document.querySelector("#c");
-	const renderer = new THREE.WebGLRenderer({ canvas });
+	const renderer = new THREE.WebGLRenderer({
+		canvas,
+	});
 	renderer.shadowMap.enabled = true;
 
 	// Configuración de la cámara
-	const aspect = canvas.clientWidth / canvas.clientHeight;
-	const size = 10;
-	const camera = new THREE.OrthographicCamera(
-		(size * aspect) / -2,
-		(size * aspect) / 2,
-		size / -2,
-		size / 2,
-		1,
-		100
-	);
-	camera.zoom = 3;
-	camera.position.set(0, 0, 5);
-	camera.up.set(0, 0, -1);
+	const fov = 40;
+	const aspect = 2; // the canvas default
+	const near = 0.01;
+	const far = 200;
+	const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
+	camera.position.set(0, 0, 25);
 	camera.lookAt(0, 0, 0);
+
+	gui.add(camera, "fov", 1, 180).onChange(updateCamera);
+	const minMaxGUIHelper = new MinMaxGUIHelper(camera, "near", "far", 0.1);
+	gui.add(minMaxGUIHelper, "min", 0.1, 1000, 0.1)
+		.name("near")
+		.onChange(updateCamera);
+	gui.add(minMaxGUIHelper, "max", 0.1, 1000, 0.1)
+		.name("far")
+		.onChange(updateCamera);
+
 	const scene = new THREE.Scene();
 	// scene.background = new THREE.Color(1, 1, 1);
 
@@ -89,6 +82,27 @@ function main() {
 	controls.addEventListener("change", render);
 	controls.target.set(0, 0, 0);
 	controls.update();
+
+	const planeSize = 40;
+
+	const loader = new THREE.TextureLoader();
+	const texture = loader.load("./resources/images/checker.png");
+	texture.wrapS = THREE.RepeatWrapping;
+	texture.wrapT = THREE.RepeatWrapping;
+	texture.magFilter = THREE.NearestFilter;
+	const repeats = planeSize / 2;
+	texture.repeat.set(repeats, repeats);
+
+	const planeGeo = new THREE.PlaneGeometry(planeSize, planeSize);
+	const planeMat = new THREE.MeshPhongMaterial({
+		map: texture,
+		side: THREE.DoubleSide,
+	});
+	const floor = new THREE.Mesh(planeGeo, planeMat);
+	floor.rotation.x = Math.PI;
+	floor.receiveShadow = true;
+
+	scene.add(floor);
 
 	const model = new THREE.Object3D();
 
@@ -123,31 +137,47 @@ function main() {
 		geometries,
 		false
 	);
-	const material = new THREE.MeshLambertMaterial({
+	const material = new THREE.MeshPhongMaterial({
 		color: "red",
 		emissive: "blue",
-		wireframe: true,
 	});
 	const mesh = new THREE.Mesh(mergedGeometry, material);
+	mesh.castShadow = true;
 	model.add(mesh);
 
 	scene.add(model);
 	makeAxisGrid(model, `Model grid`, 3);
 
 	// Luz
-	const skyColor = 0xffffff;
-	const groundColor = 0x545454; // brownish orange
+	const color = 0xffffff;
 	const intensity = 1;
-	const light = new THREE.HemisphereLight(skyColor, groundColor, intensity);
+	const light = new THREE.DirectionalLight(color, intensity);
+	light.position.set(0, 0, 10);
+	light.target.position.set(-5, 0, 0);
+	light.castShadow = true;
 	scene.add(light);
+	scene.add(light.target);
+
+	const helper = new THREE.DirectionalLightHelper(light);
+	scene.add(helper);
+
+	function updateLight() {
+		light.target.updateMatrixWorld();
+		helper.update();
+		render();
+	}
+	updateLight();
+
+	gui.addColor(new ColorGUIHelper(light, "color"), "value").name("color");
+	gui.add(light, "intensity", 0, 2, 0.01);
+
+	makeXYZGUI(gui, light.position, "position", updateLight);
+	makeXYZGUI(gui, light.target.position, "target", updateLight);
 
 	function render() {
 		if (resizeRendererToDisplaySize(renderer)) {
 			const canvas = renderer.domElement;
-			const newAspect = canvas.clientWidth / canvas.clientHeight;
-
-			camera.left = (size * newAspect) / -2;
-			camera.right = (size * newAspect) / 2;
+			camera.aspect = canvas.clientWidth / canvas.clientHeight;
 			camera.updateProjectionMatrix();
 		}
 
