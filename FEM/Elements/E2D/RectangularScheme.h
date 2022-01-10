@@ -1,0 +1,4 @@
+#ifndef RECTANGULAR_SCHEME_H
+#define RECTANGULAR_SCHEME_H
+
+#endif

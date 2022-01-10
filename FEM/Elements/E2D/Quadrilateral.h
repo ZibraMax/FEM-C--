@@ -1,0 +1,4 @@
+#ifndef QUADRILATERAL_H
+#define QUADRILATERAL_H
+
+#endif

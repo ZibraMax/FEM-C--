@@ -140,6 +140,7 @@ function main() {
 	const material = new THREE.MeshPhongMaterial({
 		color: "red",
 		emissive: "blue",
+		flatShading: true,
 	});
 	const mesh = new THREE.Mesh(mergedGeometry, material);
 	mesh.castShadow = true;

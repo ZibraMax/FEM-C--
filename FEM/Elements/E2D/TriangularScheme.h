@@ -1,0 +1,4 @@
+#ifndef TRIANGULAR_SCHEME_H
+#define TRIANGULAR_SCHEME_H
+
+#endif
