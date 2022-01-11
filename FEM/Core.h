@@ -2,13 +2,16 @@
 #define CORE_H
 
 #include "Geometry/Geometry.h"
-
-class Core
+namespace FEM
 {
-private:
-	/* data */
-public:
-	Core(/* args */);
-	~Core();
-};
+
+	class Core
+	{
+	private:
+		/* data */
+	public:
+		Core(/* args */);
+		~Core();
+	};
+} // namespace FEM
 #endif
