@@ -15,21 +15,7 @@ int main(int argc, char const *argv[])
         gdls = {{0, 1},
                 {2, 3}};
 
-    std::vector<std::vector<double>>
-        gdlss = {{0.0, 1.0},
-                 {2.0, 3.0}};
-
-    std::vector<std::vector<double>>
-        resultado = Utils::MxM(coords, gdlss);
-
-    FEM::Element *elemento = new FEM::Element(coords, gdls, true);
-
-    Eigen::MatrixXd m(2, 2);
-    m(0, 0) = 3;
-    m(1, 0) = 2.5;
-    m(0, 1) = -1;
-    m(1, 1) = m(1, 0) + m(0, 1);
-    std::cout << m << std::endl;
+    FEM::Element *elemento = new FEM::Element(coords, gdls);
 
     nlohmann::json j2 = {
         {"pi", 3.141},
@@ -40,5 +26,6 @@ int main(int argc, char const *argv[])
         {"list", {1, 0, 2}},
         {"object", {{"currency", "USD"}, {"value", 42.99}}}};
     std::cout << j2 << std::endl;
+    std::cout << elemento->Ke << std::endl;
     return 0;
 }

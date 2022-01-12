@@ -3,34 +3,35 @@
 
 #include <iostream>
 #include <vector>
+#include "Eigen/Dense"
+
 namespace FEM
 {
 
 	class Element
 	{
-	private:
-		void matrixVectorzToZeros();
-
 	public:
-		std::vector<std::vector<double>> coords;
-		std::vector<std::vector<int>> gdl;
-		bool border;
-		int n;
-		std::string properties;
-		bool borderIntegrals;
-		std::vector<std::vector<double>> Ke;
-		std::vector<std::vector<double>> Fe;
-		std::vector<std::vector<double>> Qe;
-		std::vector<std::vector<double>> Ue;
-
 		Element(std::vector<std::vector<double>> coords, std::vector<std::vector<int>> gdl, bool border = false);
 
-		std::vector<std::vector<double>> T(std::vector<std::vector<double>> z);
-		std::vector<std::vector<std::vector<double>>> J(std::vector<std::vector<double>> z);
-		std::vector<std::vector<double>> inverseMapping(std::vector<std::vector<double>> x, int n = 100);
+		int n;							   // Número de nodos
+		int m;							   // Númerod de dimensiones
+		Eigen::MatrixXd coords;			   // Coordenadas mxn
+		std::vector<std::vector<int>> gdl; // Grados de libertad mxn
+		bool border;					   // Si es un elemento de borde
+		std::string properties;
+		bool borderIntegrals;
+		Eigen::MatrixXd Ke;
+		Eigen::VectorXd Fe;
+		Eigen::VectorXd Qe;
+		Eigen::VectorXd Ue;
 
-		virtual std::vector<std::vector<double>> psis(std::vector<std::vector<double>> z);
-		virtual std::vector<std::vector<std::vector<double>>> dpsis(std::vector<std::vector<double>> z);
+		void matrixVectorzToZeros();
+		Eigen::MatrixXd T(Eigen::MatrixXd z);
+		std::vector<Eigen::MatrixXd> J(Eigen::MatrixXd z);
+		Eigen::MatrixXd inverseMapping(Eigen::MatrixXd x, int n = 100);
+
+		virtual Eigen::MatrixXd psis(Eigen::MatrixXd z);
+		virtual std::vector<Eigen::MatrixXd> dpsis(Eigen::MatrixXd z);
 	};
 }
 

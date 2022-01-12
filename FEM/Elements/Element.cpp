@@ -1,16 +1,26 @@
 #include "Element.h"
-#include "Utils.h"
 
 namespace FEM
 {
 
 	Element::Element(std::vector<std::vector<double>> coords, std::vector<std::vector<int>> gdl, bool border)
 	{
-		this->coords = coords;
+		this->m = coords.size();
+		this->n = coords[0].size();
+
+		Eigen::MatrixXd coordsp(this->m, this->n);
+		for (int i = 0; i < this->m; i++)
+		{
+			for (int j = 0; j < this->n; j++)
+			{
+				coordsp(i, j) = coords[i][j];
+			}
+		}
+
+		this->coords = coordsp;
 		this->gdl = gdl;
 		this->border = border;
 
-		this->n = coords[0].size(); // Número de nodos
 		this->properties = "";
 		this->borderIntegrals = false;
 		if (!border)
@@ -22,53 +32,39 @@ namespace FEM
 	void Element::matrixVectorzToZeros()
 	{
 		int n = this->n;
-		this->Ke = {};
-		this->Qe = {};
-		this->Fe = {};
-		this->Ue = {};
-
-		for (int i = 0; i < n; i++)
-		{
-			std::vector<double> line;
-			std::vector<double> vect = {0.0};
-			for (int j = 0; j < n; j++)
-			{
-				line.push_back(0);
-			}
-			this->Ke.push_back(line);
-			this->Fe.push_back(vect);
-			this->Qe.push_back(vect);
-			this->Ue.push_back(vect);
-		}
+		this->Ke = Eigen::MatrixXd::Zero(n, n);
+		this->Qe = Eigen::VectorXd::Zero(n);
+		this->Fe = Eigen::VectorXd::Zero(n);
+		this->Ue = Eigen::VectorXd::Zero(n);
 	}
 
-	std::vector<std::vector<double>> Element::T(std::vector<std::vector<double>> z)
+	Eigen::MatrixXd Element::T(Eigen::MatrixXd z)
 	{
-		return Utils::MxM(this->psis(z), this->coords);
+		return psis(z) * this->coords;
 	}
-	std::vector<std::vector<std::vector<double>>> Element::J(std::vector<std::vector<double>> z)
+	std::vector<Eigen::MatrixXd> Element::J(Eigen::MatrixXd z)
 	{
-		std::vector<std::vector<std::vector<double>>> dpsis = this->dpsis(z);
-		std::vector<std::vector<std::vector<double>>> result;
+		std::vector<Eigen::MatrixXd> dpsis = this->dpsis(z);
+		std::vector<Eigen::MatrixXd> result;
 		for (int i = 0; i < dpsis.size(); i++)
 		{
-			result.push_back(Utils::MxM(dpsis[i], this->coords));
+			result.push_back(dpsis[i] * this->coords);
 		}
 
 		return result;
 	}
 
-	std::vector<std::vector<double>> Element::inverseMapping(std::vector<std::vector<double>> x, int n)
+	Eigen::MatrixXd Element::inverseMapping(Eigen::MatrixXd x, int n)
 	{
 		return x;
 	}
 
-	std::vector<std::vector<double>> Element::psis(std::vector<std::vector<double>> z)
+	Eigen::MatrixXd Element::psis(Eigen::MatrixXd z)
 	{
 		return {};
 	}
 
-	std::vector<std::vector<std::vector<double>>> Element::dpsis(std::vector<std::vector<double>> z)
+	std::vector<Eigen::MatrixXd> Element::dpsis(Eigen::MatrixXd z)
 	{
 		return {};
 	}
