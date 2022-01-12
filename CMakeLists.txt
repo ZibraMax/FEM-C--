@@ -16,13 +16,24 @@ if(NOT json_POPULATED)
 	add_subdirectory(${json_SOURCE_DIR} ${json_BINARY_DIR} EXCLUDE_FROM_ALL)
 endif()
 
+set(PROJECT_SOURCES
+		main.cpp
+		./FEM/Elements/Element.cpp
+		./FEM/Elements/E2D/Element2D.cpp
+		./FEM/Elements/E2D/LTriangular.cpp
+		./FEM/Elements/E2D/TriangularScheme.cpp
+		./FEM/Utils/Utils.cpp)
 
-include_directories(${PROJECT_SOURCE_DIR}/FEM)
-include_directories(${PROJECT_SOURCE_DIR}/FEM/Elements)
-include_directories(${PROJECT_SOURCE_DIR}/FEM/Utils)
-include_directories(${PROJECT_SOURCE_DIR}/libs)
+set(PROJECT_HEADERS
+		${PROJECT_SOURCE_DIR}/FEM
+		${PROJECT_SOURCE_DIR}/FEM/Elements
+		${PROJECT_SOURCE_DIR}/FEM/Elements/E2D
+		${PROJECT_SOURCE_DIR}/FEM/Utils
+		${PROJECT_SOURCE_DIR}/libs)
 
-add_executable(FEM main.cpp ./FEM/Elements/Element.cpp ./FEM/Utils/Utils.cpp)
+include_directories("${PROJECT_HEADERS}")
+
+add_executable(FEM "${PROJECT_SOURCES}")
 target_link_libraries(FEM PRIVATE nlohmann_json::nlohmann_json)
 
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})

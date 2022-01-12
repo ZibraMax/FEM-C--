@@ -7,6 +7,7 @@ namespace FEM
 	{
 		this->m = coords.size();
 		this->n = coords[0].size();
+		this->k = gdl.size();
 
 		Eigen::MatrixXd coordsp(this->m, this->n);
 		for (int i = 0; i < this->m; i++)
@@ -31,7 +32,7 @@ namespace FEM
 
 	void Element::matrixVectorzToZeros()
 	{
-		int n = this->n;
+		int n = this->n * this->k;
 		this->Ke = Eigen::MatrixXd::Zero(n, n);
 		this->Qe = Eigen::VectorXd::Zero(n);
 		this->Fe = Eigen::VectorXd::Zero(n);
@@ -42,6 +43,7 @@ namespace FEM
 	{
 		return psis(z) * this->coords;
 	}
+
 	std::vector<Eigen::MatrixXd> Element::J(Eigen::MatrixXd z)
 	{
 		std::vector<Eigen::MatrixXd> dpsis = this->dpsis(z);
@@ -67,6 +69,33 @@ namespace FEM
 	std::vector<Eigen::MatrixXd> Element::dpsis(Eigen::MatrixXd z)
 	{
 		return {};
+	}
+
+	Eigen::MatrixXd Element::giveSolution(Eigen::MatrixXd z)
+	{
+		return this->Ue * this->psis(z);
+	}
+
+	void Element::setUe(Eigen::VectorXd U)
+	{
+		// En el caso que se quieran elementos
+		// con grados de libertad que no se ubiquen
+		// en los nodos principales hay que modificar esto
+
+		int k = 0;
+		for (int i = 0; i < this->k; i++)
+		{
+			for (int j = 0; j < this->n; j++)
+			{
+				this->Ue(k) = U(this->gdl[i][j]);
+				k++;
+			}
+		}
+	}
+
+	bool Element::isInside(Eigen::MatrixXd x)
+	{
+		return false;
 	}
 
 } // namespace FEM
