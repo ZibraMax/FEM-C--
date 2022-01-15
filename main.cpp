@@ -5,6 +5,7 @@
 #include "Element2D.h"
 #include "LTriangular.h"
 #include "Serendipity.h"
+#include "Quadrilateral.h"
 #include "Utils.h"
 
 #include "Eigen/Dense"
@@ -12,12 +13,12 @@
 
 int main(int argc, char const *argv[])
 {
-    std::vector<std::vector<double>> coords = {{0.2, 2.5, 5.9, 1.1, 1.35, 4.2, 3.5, 0.65},
-                                               {1.1, 3.2, 1.2, 0.8, 2.15, 2.2, 1.0, 0.95}};
+    std::vector<std::vector<double>> coords = {{0.2, 2.5, 5.9, 1.1},
+                                               {1.1, 3.2, 1.2, 0.8}};
     std::vector<std::vector<int>>
-        gdls = {{1, 0, 2, 3, 4, 5, 6, 8}};
+        gdls = {{1, 0, 2, 3}};
 
-    FEM::Element *elemento = new FEM::Serendipity(coords, gdls);
+    FEM::Element *elemento = new FEM::Quadrilateral(coords, gdls);
 
     // Eigen::VectorXd U(9);
     // U << 7.0, 6.0, 5.0, 4.0, 3.0, 6.7, 2.3, 4.6, 5.7;
@@ -36,19 +37,22 @@ int main(int argc, char const *argv[])
     // std::cout << elemento->Ke << std::endl;
     std::cout << "----------------" << std::endl;
 
-    Eigen::MatrixXd p_prueba(2, 3);
+    Eigen::MatrixXd p_prueba(2, 4);
 
-    p_prueba << 0.0, 1.0, 0.0, 0.0, 0.0, 1.0;
+    p_prueba << -1.0, 1.0, 1.0, -1.0,
+                -1.0,-1.0, 1.0,  1.0;
     std::cout << "----------------" << std::endl;
     std::cout << elemento->z << std::endl;
     std::cout << "----------------" << std::endl;
     std::cout << elemento->w << std::endl;
     std::cout << "----------------" << std::endl;
+    std::cout << p_prueba << std::endl;
+    std::cout << "----------------" << std::endl;
     std::cout << elemento->psis(p_prueba) << std::endl;
     std::cout << "----------------" << std::endl;
     std::cout << elemento->psis(elemento->z) << std::endl;
     std::cout << "----------------" << std::endl;
-    std::cout << elemento->T(elemento->z) << std::endl;
+    std::cout << elemento->T(p_prueba) << std::endl;
     std::cout << "----------------" << std::endl;
     auto jacs = elemento->J(elemento->z);
     for (auto jac : jacs)

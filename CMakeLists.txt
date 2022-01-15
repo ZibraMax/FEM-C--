@@ -24,6 +24,7 @@ set(PROJECT_SOURCES
 		./FEM/Elements/E2D/Element2D.cpp
 		./FEM/Elements/E2D/LTriangular.cpp
 		./FEM/Elements/E2D/Serendipity.cpp
+		./FEM/Elements/E2D/Quadrilateral.cpp
 		./FEM/Elements/E2D/TriangularScheme.cpp
 		./FEM/Elements/E2D/RectangularScheme.cpp
 		./FEM/Utils/Utils.cpp)
