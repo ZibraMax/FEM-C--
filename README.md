@@ -3,4 +3,9 @@
 A C++ FEM implementation based on [AFEM](https://github.com/ZibraMax/FEM)
 
 Requires Eigen
-Requires JSON for modern C++
+Place Eigen folder content in ./libs/Eigen
+
+
+Requires JSON for modern C++.
+
+Use CMake for fetching JSON
