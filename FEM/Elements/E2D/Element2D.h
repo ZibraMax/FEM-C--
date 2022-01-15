@@ -10,7 +10,7 @@ namespace FEM
 	{
 	public:
 		Element2D(std::vector<std::vector<double>> coords, std::vector<std::vector<int>> gdl);
-		bool isInside(Eigen::MatrixXd x);
+		bool isInside(Eigen::MatrixXd &x);
 	};
 
 } // namespace FEM

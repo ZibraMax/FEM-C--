@@ -10,8 +10,8 @@ namespace FEM
 	{
 	public:
 		LTriangular(std::vector<std::vector<double>> coords, std::vector<std::vector<int>> gdl);
-		Eigen::MatrixXd psis(Eigen::MatrixXd z);
-		std::vector<Eigen::MatrixXd> dpsis(Eigen::MatrixXd z);
+		Eigen::MatrixXd psis(Eigen::MatrixXd &z);
+		std::vector<Eigen::MatrixXd> dpsis(Eigen::MatrixXd &z);
 	};
 
 }

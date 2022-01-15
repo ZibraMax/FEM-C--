@@ -8,23 +8,28 @@ namespace FEM
 		//Definir bordes
 	}
 
-	Eigen::MatrixXd LTriangular::psis(Eigen::MatrixXd z)
+	Eigen::MatrixXd LTriangular::psis(Eigen::MatrixXd &z)
 	{
-		int n_z = this->w.size();
-		Eigen::ArrayXd NOSOYRES(3, n_z); //ERROR ESTA AQUÍ
-		std::cout << n_z << std::endl;
+		int n_z = z.row(0).size();
+		Eigen::MatrixXd res(this->n, n_z);
 		Eigen::ArrayXd _z = z.row(0).array();
 		Eigen::ArrayXd _n = z.row(1).array();
-		std::cout << _z << std::endl;
-		std::cout << _n << std::endl;
-		std::cout << 1.0 - _z - _n << std::endl;
-		NOSOYRES << 1.0 - _z - _n, _z, _n;
-		return NOSOYRES.matrix();
+		res << (1.0 - _z - _n).matrix().transpose(), _z.matrix().transpose(), _n.matrix().transpose();
+		return res;
 	}
 
-	std::vector<Eigen::MatrixXd> LTriangular::dpsis(Eigen::MatrixXd z)
+	std::vector<Eigen::MatrixXd> LTriangular::dpsis(Eigen::MatrixXd &z)
 	{
-		return {};
+		std::vector<Eigen::MatrixXd> res;
+		int n = z.row(0).size();
+		for (int i = 0; i < n; i++)
+		{
+			Eigen::MatrixXd matrix(this->n, this->m);
+			matrix << -1.0, -1.0, 1.0, 0.0, 0.0, 1.0;
+			res.push_back(matrix);
+		}
+
+		return res;
 	}
 
 } // namespace FEM

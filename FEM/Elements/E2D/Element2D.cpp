@@ -8,7 +8,7 @@ namespace FEM
 	{
 	}
 
-	bool Element2D::isInside(Eigen::MatrixXd x)
+	bool Element2D::isInside(Eigen::MatrixXd &x)
 	{
 		return true;
 	}

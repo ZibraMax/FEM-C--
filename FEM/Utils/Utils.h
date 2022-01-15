@@ -1,11 +1,23 @@
 #ifndef UTILS_H
 #define UTILS_H
 
+#include <iostream>
+#include <cmath>
 #include <vector>
 
 namespace Utils
 {
-	std::vector<std::vector<double>> MxM(std::vector<std::vector<double>> A, std::vector<std::vector<double>> B);
+
+	class GaussLegendre
+	{
+	public:
+		double p(int n, double x);
+		double dpdx(int n, double x);
+		std::vector<double> z;
+		std::vector<double> w;
+		GaussLegendre(int n);
+	};
+
 } // namespace Utils
 
 #endif

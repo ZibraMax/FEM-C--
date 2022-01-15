@@ -39,18 +39,18 @@ namespace FEM
 		this->Ue = Eigen::VectorXd::Zero(n);
 	}
 
-	Eigen::MatrixXd Element::T(Eigen::MatrixXd z)
+	Eigen::MatrixXd Element::T(Eigen::MatrixXd &z)
 	{
-		return psis(z) * this->coords;
+		return this->coords * psis(z);
 	}
 
-	std::vector<Eigen::MatrixXd> Element::J(Eigen::MatrixXd z)
+	std::vector<Eigen::MatrixXd> Element::J(Eigen::MatrixXd &z)
 	{
 		std::vector<Eigen::MatrixXd> dpsis = this->dpsis(z);
 		std::vector<Eigen::MatrixXd> result;
 		for (int i = 0; i < dpsis.size(); i++)
 		{
-			result.push_back(dpsis[i] * this->coords);
+			result.push_back((this->coords * dpsis[i]).transpose());
 		}
 
 		return result;
@@ -61,22 +61,22 @@ namespace FEM
 		return x;
 	}
 
-	Eigen::MatrixXd Element::psis(Eigen::MatrixXd z)
+	Eigen::MatrixXd Element::psis(Eigen::MatrixXd &z)
 	{
 		return {};
 	}
 
-	std::vector<Eigen::MatrixXd> Element::dpsis(Eigen::MatrixXd z)
+	std::vector<Eigen::MatrixXd> Element::dpsis(Eigen::MatrixXd &z)
 	{
 		return {};
 	}
 
-	Eigen::MatrixXd Element::giveSolution(Eigen::MatrixXd z)
+	Eigen::MatrixXd Element::giveSolution(Eigen::MatrixXd &z)
 	{
 		return this->Ue * this->psis(z);
 	}
 
-	void Element::setUe(Eigen::VectorXd U)
+	void Element::setUe(Eigen::VectorXd &U)
 	{
 		// En el caso que se quieran elementos
 		// con grados de libertad que no se ubiquen
@@ -93,7 +93,7 @@ namespace FEM
 		}
 	}
 
-	bool Element::isInside(Eigen::MatrixXd x)
+	bool Element::isInside(Eigen::MatrixXd &x)
 	{
 		return false;
 	}
