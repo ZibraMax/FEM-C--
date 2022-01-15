@@ -5,7 +5,9 @@ namespace FEM
 	RectangularScheme::RectangularScheme(std::vector<std::vector<double>> coords, std::vector<std::vector<int>> gdl, int n)
 		: Element2D(coords, gdl)
 	{
-		Utils::GaussLegendre gl = Utils::GaussLegendre(n);
+		
+		std::vector<double> zz = Utils::darPuntos(n);
+		std::vector<double> www = Utils::darPesos(n,zz);
 
 		this->z = Eigen::MatrixXd::Zero(2, n * n);
 		this->w = Eigen::VectorXd::Zero(n * n);
@@ -15,9 +17,9 @@ namespace FEM
 		{
 			for (int j = 0; j < n; j++)
 			{
-				this->z(0, i * n + j) = gl.z[i];
-				this->z(1, i * n + j) = gl.z[j];
-				this->w(i * n + j) = gl.w[i] * gl.w[j];
+				this->z(0, i * n + j) = zz[i];
+				this->z(1, i * n + j) = zz[j];
+				this->w(i * n + j) = www[i] * www[j];
 			}
 		}
 		this->domain << -1.0, 1.0, 1.0, -1.0,

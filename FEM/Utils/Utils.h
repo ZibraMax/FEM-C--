@@ -8,15 +8,10 @@
 namespace Utils
 {
 
-	class GaussLegendre
-	{
-	public:
-		double p(int n, double x);
-		double dpdx(int n, double x);
-		std::vector<double> z;
-		std::vector<double> w;
-		GaussLegendre(int n);
-	};
+	double p( double x,int n);
+	double dpdx( double x,int n);
+	std::vector<double> darPuntos(int n);
+	std::vector<double> darPesos(int n,std::vector<double> puntos);
 
 } // namespace Utils
 
