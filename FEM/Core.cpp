@@ -1,9 +1,10 @@
 #include "Core.h"
 
-Core::Core(/* args */)
+namespace FEM
 {
-}
+	Core::Core(Geometry &geometry)
+	{
 
-Core::~Core()
-{
-}
+	}
+} // namespace FEM
+

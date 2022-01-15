@@ -1,17 +1,15 @@
 #ifndef CORE_H
 #define CORE_H
 
-#include "Geometry/Geometry.h"
+#include "Geometry.h"
+#include "Element.h"
 namespace FEM
 {
 
 	class Core
 	{
-	private:
-		/* data */
 	public:
-		Core(/* args */);
-		~Core();
+		Core(Geometry &geometry);
 	};
 } // namespace FEM
 #endif

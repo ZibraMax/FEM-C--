@@ -28,10 +28,13 @@ set(PROJECT_SOURCES
 		./FEM/Elements/E2D/Quadrilateral.cpp
 		./FEM/Elements/E2D/TriangularScheme.cpp
 		./FEM/Elements/E2D/RectangularScheme.cpp
+		./FEM/Core.cpp
+		./FEM/Geometry/Geometry.cpp
 		./FEM/Utils/Utils.cpp)
 
 set(PROJECT_HEADERS
 		${PROJECT_SOURCE_DIR}/FEM
+		${PROJECT_SOURCE_DIR}/FEM/Geometry
 		${PROJECT_SOURCE_DIR}/FEM/Elements
 		${PROJECT_SOURCE_DIR}/FEM/Elements/E2D
 		${PROJECT_SOURCE_DIR}/FEM/Utils
