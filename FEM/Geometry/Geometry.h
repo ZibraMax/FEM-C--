@@ -26,15 +26,19 @@ namespace FEM
 		std::vector<std::vector<int>> ebc;
 		std::vector<std::vector<int>> nbc;
 		int nvn;
+		int ngdl;
 
 		std::vector<Element*> elements;
 
 		void setEbc(std::vector<std::vector<int>> ebc);
 		void setNbc(std::vector<std::vector<int>> nbc);
 
-		Geometry(std::vector<std::vector<double>> nodes_coords,std::vector<std::vector<int>> dictionary, std::vector<std::string> types, std::vector<std::vector<int>> regions = {});
+		Geometry(std::vector<std::vector<double>> nodes_coords,std::vector<std::vector<int>> dictionary, std::vector<std::string> types,int nvn, std::vector<std::vector<int>> regions = {});
 		Geometry(nlohmann::json geometry_json);
 		Geometry(std::string json_file);
+
+
+		friend std::ostream& operator << (std::ostream& output, const Geometry geometry);
 	};
 }
 #endif

@@ -39,6 +39,11 @@ namespace FEM
 		virtual Eigen::MatrixXd psis(Eigen::MatrixXd &z);
 		virtual std::vector<Eigen::MatrixXd> dpsis(Eigen::MatrixXd &z);
 		virtual bool isInside(Eigen::MatrixXd &x);
+
+
+
+		friend std::ostream& operator << (std::ostream& output, const Element e);
+
 	};
 }
 

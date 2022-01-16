@@ -32,7 +32,8 @@ int main(int argc, char const *argv[])
     std::vector<std::vector<int>> dicts = {{0,2,10,8,1,6,9,5},{2,4,12,10,3,7,11,6}};
     std::vector<std::string> types = {"C2V","C2V"};
 
-    FEM::Geometry geometria = FEM::Geometry(coords,dicts,types);
+    FEM::Geometry geometria = FEM::Geometry(coords,dicts,types,1);
 
+    std::cout<<geometria<<std::endl;
     return 0;
 }
