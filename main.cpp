@@ -1,7 +1,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include "Element.h"
+#include "Geometry.h"
 #include "Element2D.h"
 #include "LTriangular.h"
 #include "Serendipity.h"
@@ -13,53 +13,26 @@
 
 int main(int argc, char const *argv[])
 {
-    std::vector<std::vector<double>> coords = {{0.2, 2.5, 5.9, 1.1, 1.35, 4.2, 3.5, 0.65},
-                                               {1.1, 3.2, 1.2, 0.8, 2.15, 2.2, 1.0, 0.95}};
-    std::vector<std::vector<int>>
-        gdls = {{1, 0, 2, 3, 4, 5, 6, 8}};
 
-    FEM::Element *elemento = new FEM::Serendipity(coords, gdls);
+    std::vector<std::vector<double>> coords = {{0.0, 0.0},
+                                                {0.5, 0.0},
+                                                {1.0, 0.0},
+                                                {1.5, 0.0},
+                                                {2.0, 0.0},
 
-    // Eigen::VectorXd U(9);
-    // U << 7.0, 6.0, 5.0, 4.0, 3.0, 6.7, 2.3, 4.6, 5.7;
-    // elemento->setUe(U);
-    // std::cout << elemento->Ue << std::endl;
+                                                {0.0, 0.5},
+                                                {1.0, 0.5},
+                                                {2.0, 0.5},
 
-    // nlohmann::json j2 = {
-    //     {"pi", 3.141},
-    //     {"happy", true},
-    //     {"name", "Niels"},
-    //     {"nothing", nullptr},
-    //     {"answer", {{"everything", 42}}},
-    //     {"list", {1, 0, 2}},
-    //     {"object", {{"currency", "USD"}, {"value", 42.99}}}};
-    // std::cout << j2 << std::endl;
-    // std::cout << elemento->Ke << std::endl;
-    std::cout << "----------------" << std::endl;
+                                                {0.0, 1.0},
+                                                {0.5, 1.0},
+                                                {1.0, 1.0},
+                                                {1.5, 1.0},
+                                                {2.0, 1.0}};
+    std::vector<std::vector<int>> dicts = {{0,2,10,8,1,6,9,5},{2,4,12,10,3,7,11,6}};
+    std::vector<std::string> types = {"C2V","C2V"};
 
-    Eigen::MatrixXd p_prueba(2, 8);
-
-    p_prueba << -1.0, 1.0, 1.0, -1.0,  0.0,  1.0, 0.0, -1.0,
-                -1.0,-1.0, 1.0,  1.0, -1.0,  0.0, 1.0,  0.0;
-    std::cout << "----------------" << std::endl;
-    std::cout << elemento->z << std::endl;
-    std::cout << "----------------" << std::endl;
-    std::cout << elemento->w << std::endl;
-    std::cout << "----------------" << std::endl;
-    std::cout << p_prueba << std::endl;
-    std::cout << "----------------" << std::endl;
-    std::cout << elemento->psis(p_prueba) << std::endl;
-    std::cout << "----------------" << std::endl;
-    std::cout << elemento->psis(elemento->z) << std::endl;
-    std::cout << "----------------" << std::endl;
-    std::cout << elemento->T(p_prueba) << std::endl;
-    std::cout << "----------------" << std::endl;
-    auto jacs = elemento->J(elemento->z);
-    for (auto jac : jacs)
-    {
-        std::cout << "----------------" << std::endl;
-        std::cout << jac << std::endl;
-    }
+    FEM::Geometry geometria = FEM::Geometry(coords,dicts,types);
 
     return 0;
 }
