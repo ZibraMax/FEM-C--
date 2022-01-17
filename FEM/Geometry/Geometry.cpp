@@ -2,6 +2,10 @@
 
 namespace FEM
 {
+	Geometry::Geometry()
+	{
+		
+	}
 	Geometry::Geometry(std::vector<std::vector<double>> nodes_coords,std::vector<std::vector<int>> dictionary,std::vector<std::string> types,int nvn,std::vector<std::vector<int>> regions)
 	{
 		this->nodes = nodes_coords;
@@ -65,12 +69,12 @@ namespace FEM
 		//load all stuff from JSON file
 	}
 
-	void Geometry::setEbc(std::vector<std::vector<int>> ebc)
+	void Geometry::setEbc(std::vector<std::vector<double>> ebc)
 	{
 		this->ebc = ebc;
 	}
 
-	void Geometry::setNbc(std::vector<std::vector<int>> nbc)
+	void Geometry::setNbc(std::vector<std::vector<double>> nbc)
 	{
 		this->nbc = nbc;
 	}

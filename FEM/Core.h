@@ -3,6 +3,7 @@
 
 #include "Geometry.h"
 #include "Element.h"
+#include "Eigen/Dense"
 
 namespace FEM
 {
@@ -10,7 +11,9 @@ namespace FEM
 	class Core
 	{
 	public:
-		Core(Geometry &geometry);
+		Geometry* geometry;
+		int ngdl;
+		Core(Geometry* geometry);
 	};
 } // namespace FEM
 #endif
