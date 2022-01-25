@@ -15,11 +15,13 @@ namespace FEM
 			for (int j = 0; j < this->n; j++)
 			{
 				coordsp(i, j) = coords[i][j];
+				this->_gdl.push_back(gdl[i][j]);
 			}
 		}
 
 		this->coords = coordsp;
 		this->gdl = gdl;
+
 		this->border = border;
 
 		this->properties = "";
@@ -34,6 +36,7 @@ namespace FEM
 	{
 		int n = this->n * this->k;
 		this->Ke = Eigen::MatrixXd::Zero(n, n);
+		this->Me = Eigen::MatrixXd::Zero(n, n);
 		this->Qe = Eigen::VectorXd::Zero(n);
 		this->Fe = Eigen::VectorXd::Zero(n);
 		this->Ue = Eigen::VectorXd::Zero(n);

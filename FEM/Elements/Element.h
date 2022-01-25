@@ -20,11 +20,13 @@ namespace FEM
 		int m;							   // Número de dimensiones
 		Eigen::MatrixXd coords;			   // Coordenadas mxn
 		std::vector<std::vector<int>> gdl; // Grados de libertad mxn
+		std::vector<int> _gdl; // Grados de libertad m.n
 		int k;							   // Númerod de variables por nodo
 		bool border;					   // Si es un elemento de borde
 		std::string properties;
 		bool borderIntegrals;
 		Eigen::MatrixXd Ke;
+		Eigen::MatrixXd Me;
 		Eigen::VectorXd Fe;
 		Eigen::VectorXd Qe;
 		Eigen::VectorXd Ue;
