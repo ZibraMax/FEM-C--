@@ -15,6 +15,12 @@ namespace FEM
 			for (int j = 0; j < this->n; j++)
 			{
 				coordsp(i, j) = coords[i][j];
+			}
+		}
+		for (int i = 0; i < this->k; i++)
+		{
+			for (int j = 0; j < this->n; j++)
+			{
 				this->_gdl.push_back(gdl[i][j]);
 			}
 		}
@@ -100,34 +106,33 @@ namespace FEM
 	{
 		return false;
 	}
-	std::ostream& operator << (std::ostream& output, const Element e)
+	std::ostream &operator<<(std::ostream &output, const Element e)
 	{
-		output<<"Element of "<<e.n<<" nodes"<<std::endl;
-		output<<e.k<<" variables per node"<<std::endl;
-		output<<e.m<<" dimensions"<<std::endl;
-		output<<"Coords:"<<std::endl;
+		output << "Element of " << e.n << " nodes" << std::endl;
+		output << e.k << " variables per node" << std::endl;
+		output << e.m << " dimensions" << std::endl;
+		output << "Coords:" << std::endl;
 		for (int i = 0; i < e.n; i++)
 		{
 			for (int j = 0; j < e.m; j++)
 			{
-				output<<e.coords(j,i)<<"\t";
+				output << e.coords(j, i) << "\t";
 			}
-			output<<std::endl;
+			output << std::endl;
 		}
-		output<<"Degrees of freedom:"<<std::endl;
+		output << "Degrees of freedom:" << std::endl;
 		for (int i = 0; i < e.k; i++)
 		{
-			output<<"Variable "<<i<<std::endl;
+			output << "Variable " << i << std::endl;
 			for (int j = 0; j < e.n; j++)
 			{
-				output<<e.gdl[i][j]<<"\t";
+				output << e.gdl[i][j] << "\t";
 			}
-			output<<std::endl;
+			output << std::endl;
 		}
-		output<<"++++++++++++++++++++++++";
+		output << "++++++++++++++++++++++++";
 
 		return output;
 	}
-
 
 } // namespace FEM
