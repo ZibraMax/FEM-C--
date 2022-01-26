@@ -32,7 +32,7 @@ namespace FEM
 			(0.5 * (1.0 - _z * _z) * (1.0 - _n)).matrix().transpose(),
 			(0.5 * (1.0 + _z) * (1.0 - _n * _n)).matrix().transpose(),
 			(0.5 * (1.0 - _z * _z) * (1.0 + _n)).matrix().transpose(),
-			(0.5 * (1.0 - _z) * (1.0 - _n* _n)).matrix().transpose();
+			(0.5 * (1.0 - _z) * (1.0 - _n * _n)).matrix().transpose();
 		return res;
 	}
 

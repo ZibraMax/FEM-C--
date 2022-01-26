@@ -20,7 +20,7 @@ namespace FEM
 		int m;							   // Número de dimensiones
 		Eigen::MatrixXd coords;			   // Coordenadas mxn
 		std::vector<std::vector<int>> gdl; // Grados de libertad mxn
-		std::vector<int> _gdl; // Grados de libertad m.n
+		std::vector<int> _gdl;			   // Grados de libertad m.n
 		int k;							   // Númerod de variables por nodo
 		bool border;					   // Si es un elemento de borde
 		std::string properties;
@@ -42,10 +42,7 @@ namespace FEM
 		virtual std::vector<Eigen::MatrixXd> dpsis(Eigen::MatrixXd &z);
 		virtual bool isInside(Eigen::MatrixXd &x);
 
-
-
-		friend std::ostream& operator << (std::ostream& output, const Element e);
-
+		friend std::ostream &operator<<(std::ostream &output, const Element e);
 	};
 }
 

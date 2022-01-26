@@ -11,7 +11,7 @@ namespace FEM
 	class Core
 	{
 	public:
-		Geometry* geometry;
+		Geometry *geometry;
 		int ngdl;
 
 		Eigen::MatrixXd K;
@@ -21,7 +21,7 @@ namespace FEM
 		Eigen::VectorXd S;
 		Eigen::VectorXd U;
 
-		Core(Geometry* geometry);
+		Core(Geometry *geometry);
 		void ensembling();
 		void borderConditions();
 		void solveES();

@@ -5,9 +5,9 @@ namespace FEM
 	RectangularScheme::RectangularScheme(std::vector<std::vector<double>> coords, std::vector<std::vector<int>> gdl, int n)
 		: Element2D(coords, gdl)
 	{
-		
+
 		std::vector<double> zz = Utils::darPuntos(n);
-		std::vector<double> www = Utils::darPesos(n,zz);
+		std::vector<double> www = Utils::darPesos(n, zz);
 
 		this->z = Eigen::MatrixXd::Zero(2, n * n);
 		this->w = Eigen::VectorXd::Zero(n * n);
