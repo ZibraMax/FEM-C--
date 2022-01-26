@@ -29,6 +29,7 @@ set(PROJECT_SOURCES
 		./FEM/Elements/E2D/TriangularScheme.cpp
 		./FEM/Elements/E2D/RectangularScheme.cpp
 		./FEM/Core.cpp
+		./FEM/PlaneStress.cpp
 		./FEM/Geometry/Geometry.cpp
 		./FEM/Utils/Utils.cpp)
 
