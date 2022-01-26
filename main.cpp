@@ -34,31 +34,14 @@ int main(int argc, char const *argv[])
 
     // FEM::Geometry *geometria = new FEM::Geometry(coords, dicts, types, 1);
     FEM::Geometry *geometria = new FEM::Geometry("../beam_geometry.json");
-    std::vector<std::vector<double>> cb = {{0.0, 0.1}, {1.0, 1.1}};
-    geometria->setEbc(cb);
     FEM::Core O = FEM::Core(geometria);
     std::cout << "=========================================" << std::endl;
-
-    for (int k = 0; k < 4; k++)
-    {
-        FEM::Element *e = O.geometry->elements[k];
-        for (int i = 0; i < e->n; i++)
-        {
-            for (int j = 0; j < e->n; j++)
-            {
-                e->Ke(i, j) = 1.5;
-            }
-        }
-        // std::cout << *e << std::endl;
-        // std::cout << "--------" << std::endl;
-        // std::cout << e->Ke << std::endl;
-    }
     O.ensembling();
     O.borderConditions();
     O.solveES();
     Utils::writeToCSVfile("K.csv", O.K);
     Utils::writeToCSVfile("S.csv", O.S);
-    Utils::writeToCSVfile("u.csv", O.U);
+    Utils::writeToCSVfile("U.csv", O.U);
 
     return 0;
 }
