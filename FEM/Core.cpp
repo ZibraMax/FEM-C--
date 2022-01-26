@@ -49,7 +49,7 @@ namespace FEM
 			this->S = this->S - columna;
 			this->K.col(I) *= 0.0;
 			this->K.row(I) *= 0.0;
-			this->K(I, I) = ebc[i][1];
+			this->K(I, I) = 1.0;
 		}
 
 		this->S = this->S + this->F + this->Q;

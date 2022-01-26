@@ -3,6 +3,7 @@
 #include <vector>
 #include "Geometry.h"
 #include "Core.h"
+#include "Utils.h"
 
 #include "nlohmann/json.hpp"
 
@@ -44,7 +45,7 @@ int main(int argc, char const *argv[])
         {
             for (int j = 0; j < e->n; j++)
             {
-                e->Ke(i, j) = 1.0;
+                e->Ke(i, j) = 1.5;
             }
         }
         // std::cout << *e << std::endl;
@@ -54,11 +55,9 @@ int main(int argc, char const *argv[])
     O.ensembling();
     O.borderConditions();
     O.solveES();
-    std::cout << O.K << std::endl;
-    std::cout << O.S << std::endl;
-    std::cout << O.U << std::endl;
-
-    int a = 0;
+    Utils::writeToCSVfile("K.csv", O.K);
+    Utils::writeToCSVfile("S.csv", O.S);
+    Utils::writeToCSVfile("u.csv", O.U);
 
     return 0;
 }

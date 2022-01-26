@@ -52,4 +52,12 @@ namespace Utils
 		return pesos;
 	}
 
+	const static Eigen::IOFormat CSVFormat(Eigen::StreamPrecision, Eigen::DontAlignCols, ", ", "\n");
+
+	void writeToCSVfile(std::string name, const Eigen::MatrixXd &matrix)
+	{
+		std::ofstream file(name.c_str());
+		file << matrix.format(CSVFormat);
+	}
+
 } // namespace Utils
