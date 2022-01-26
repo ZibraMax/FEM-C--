@@ -32,9 +32,9 @@ namespace FEM
 
 		void setEbc(std::vector<std::vector<double>> ebc);
 		void setNbc(std::vector<std::vector<double>> nbc);
+		void initializeElements();
 
 		Geometry(std::vector<std::vector<double>> nodes_coords, std::vector<std::vector<int>> dictionary, std::vector<std::string> types, int nvn, std::vector<std::vector<int>> regions = {});
-		Geometry(nlohmann::json geometry_json);
 		Geometry(std::string json_file);
 		Geometry();
 

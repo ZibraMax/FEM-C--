@@ -5,6 +5,7 @@ namespace FEM
 	Geometry::Geometry()
 	{
 	}
+
 	Geometry::Geometry(std::vector<std::vector<double>> nodes_coords, std::vector<std::vector<int>> dictionary, std::vector<std::string> types, int nvn, std::vector<std::vector<int>> regions)
 	{
 		this->nodes = nodes_coords;
@@ -13,13 +14,35 @@ namespace FEM
 		this->dictionary = dictionary;
 		this->nvn = nvn;
 		this->ngdl = this->nodes.size() * this->nvn;
+		this->initializeElements();
+	}
+
+	Geometry::Geometry(std::string json_file)
+	{
+		//open json file
+		std::ifstream i(json_file);
+		nlohmann::json j;
+		i >> j;
+		this->nodes = j["nodes"].get<std::vector<std::vector<double>>>();
+		this->dictionary = j["dictionary"].get<std::vector<std::vector<int>>>();
+		this->types = j["types"].get<std::vector<std::string>>();
+		this->regions = j["regions"].get<std::vector<std::vector<int>>>();
+		this->ebc = j["ebc"].get<std::vector<std::vector<double>>>();
+		this->nbc = j["nbc"].get<std::vector<std::vector<double>>>();
+		this->nvn = j["nvn"].get<int>();
+		this->ngdl = j["ngdl"].get<int>();
+		this->initializeElements();
+	}
+
+	void Geometry::initializeElements()
+	{
 		for (int i = 0; i < dictionary.size(); i++)
 		{
 			std::vector<int> element_nodes = dictionary[i];
 			int n = element_nodes.size();
 			std::vector<std::vector<double>> coords;
 			std::vector<std::vector<int>> gdls;
-			int ndim = nodes_coords[0].size();
+			int ndim = nodes[0].size();
 			for (int j = 0; j < ndim; j++)
 			{
 				std::vector<double> dimension;
@@ -57,16 +80,6 @@ namespace FEM
 				this->elements.push_back(new Serendipity(coords, gdls));
 			}
 		}
-	}
-
-	Geometry::Geometry(nlohmann::json geometry_json)
-	{
-		//load all stuff from JSON object
-	}
-
-	Geometry::Geometry(std::string json_file)
-	{
-		//load all stuff from JSON file
 	}
 
 	void Geometry::setEbc(std::vector<std::vector<double>> ebc)
