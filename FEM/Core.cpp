@@ -36,16 +36,16 @@ namespace FEM
 
 	void Core::borderConditions()
 	{
-		std::vector<std::vector<double>> nbc = this->geometry->nbc;
-		std::vector<std::vector<double>> ebc = this->geometry->ebc;
-		for (int i = 0; i < nbc.size(); ++i)
+		// std::vector<std::vector<double>> nbc = this->geometry->nbc;
+		// std::vector<std::vector<double>> ebc = this->geometry->ebc;
+		for (int i = 0; i < this->geometry->nbc.size(); ++i)
 		{
-			this->Q((int)nbc[i][0]) = nbc[i][1];
+			this->Q((int)this->geometry->nbc[i][0]) = this->geometry->nbc[i][1];
 		}
-		for (int i = 0; i < ebc.size(); ++i)
+		for (int i = 0; i < this->geometry->ebc.size(); ++i)
 		{
-			int I = (int)ebc[i][0];
-			Eigen::VectorXd columna = this->K.col(I) * ebc[i][1];
+			int I = (int)this->geometry->ebc[i][0];
+			Eigen::VectorXd columna = this->K.col(I) * this->geometry->ebc[i][1];
 			this->S = this->S - columna;
 			this->K.col(I) *= 0.0;
 			this->K.row(I) *= 0.0;
@@ -53,11 +53,15 @@ namespace FEM
 		}
 
 		this->S = this->S + this->F + this->Q;
-		for (int i = 0; i < ebc.size(); ++i)
-		{
-			int I = (int)ebc[i][0];
-			this->S[I] = ebc[I][1];
-		}
+		// Utils::writeToCSVfile("S.csv", this->S);
+		// Utils::writeToCSVfile("ebc.csv", this->geometry->ebc);
+		// for (int i = 0; i < this->geometry->ebc.size(); ++i)
+		// {
+		// 	int I = (int)this->geometry->ebc[i][0];
+		// 	std::cout << this->S[I] << std::endl;
+		// 	std::cout << this->geometry->ebc[I][1] << std::endl;
+		// 	this->S[I] = this->geometry->ebc[I][1];
+		// }
 	}
 	void Core::elementMatrices()
 	{

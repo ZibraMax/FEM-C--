@@ -2,7 +2,7 @@
 #include <string>
 #include <vector>
 #include "Geometry.h"
-#include "Core.h"
+#include "PlaneStress.h"
 #include "Utils.h"
 
 #include "nlohmann/json.hpp"
@@ -34,13 +34,24 @@ int main(int argc, char const *argv[])
 
     // FEM::Geometry *geometria = new FEM::Geometry(coords, dicts, types, 1);
     FEM::Geometry *geometria = new FEM::Geometry("../beam_geometry.json");
-    FEM::Core O = FEM::Core(geometria);
+
+    double E = 21000000.0;
+    double v = 0.2;
+    double t = 0.3;
+    double rho = 23.54 / 9.81;
+    double fx = 0.0;
+    double fy = -rho * 9.8 * t;
+    FEM::PlaneStress O = FEM::PlaneStress(geometria, E, v, t, rho, fx, fy);
     std::cout << "=========================================" << std::endl;
+    O.elementMatrices();
     O.ensembling();
     O.borderConditions();
-    O.solveES();
+    std::cout << "=========================================" << std::endl;
     Utils::writeToCSVfile("K.csv", O.K);
+    Utils::writeToCSVfile("M.csv", O.M);
     Utils::writeToCSVfile("S.csv", O.S);
+    O.solveES();
+    std::cout << "=========================================" << std::endl;
     Utils::writeToCSVfile("U.csv", O.U);
 
     return 0;

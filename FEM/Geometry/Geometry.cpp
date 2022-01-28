@@ -13,7 +13,6 @@ namespace FEM
 		this->types = types;
 		this->dictionary = dictionary;
 		this->nvn = nvn;
-		this->ngdl = this->nodes.size() * this->nvn;
 		this->initializeElements();
 	}
 
@@ -36,6 +35,7 @@ namespace FEM
 
 	void Geometry::initializeElements()
 	{
+		this->ngdl = this->nodes.size() * this->nvn;
 		for (int i = 0; i < dictionary.size(); i++)
 		{
 			std::vector<int> element_nodes = dictionary[i];

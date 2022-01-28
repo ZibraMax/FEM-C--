@@ -34,8 +34,8 @@ namespace FEM
 		void matrixVectorzToZeros();
 		void setUe(Eigen::VectorXd &U);
 		Eigen::MatrixXd giveSolution(Eigen::MatrixXd &z);
-		Eigen::MatrixXd T(Eigen::MatrixXd &z);
-		std::vector<Eigen::MatrixXd> J(Eigen::MatrixXd &z);
+		std::vector<Eigen::MatrixXd> T(Eigen::MatrixXd &z);
+		std::vector<std::vector<Eigen::MatrixXd>> J(Eigen::MatrixXd &z);
 		Eigen::MatrixXd inverseMapping(Eigen::MatrixXd x, int n = 100);
 
 		virtual Eigen::MatrixXd psis(Eigen::MatrixXd &z);

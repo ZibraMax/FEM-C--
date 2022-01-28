@@ -48,12 +48,13 @@ namespace FEM
 		this->Ue = Eigen::VectorXd::Zero(n);
 	}
 
-	Eigen::MatrixXd Element::T(Eigen::MatrixXd &z)
+	std::vector<Eigen::MatrixXd> Element::T(Eigen::MatrixXd &z)
 	{
-		return this->coords * psis(z);
+		Eigen::MatrixXd _psis = this->psis(z);
+		return {_psis, this->coords * _psis};
 	}
 
-	std::vector<Eigen::MatrixXd> Element::J(Eigen::MatrixXd &z)
+	std::vector<std::vector<Eigen::MatrixXd>> Element::J(Eigen::MatrixXd &z)
 	{
 		std::vector<Eigen::MatrixXd> dpsis = this->dpsis(z);
 		std::vector<Eigen::MatrixXd> result;
@@ -62,7 +63,7 @@ namespace FEM
 			result.push_back((this->coords * dpsis[i]).transpose());
 		}
 
-		return result;
+		return {result, dpsis};
 	}
 
 	Eigen::MatrixXd Element::inverseMapping(Eigen::MatrixXd x, int n)
