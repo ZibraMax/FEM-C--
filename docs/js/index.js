@@ -12,7 +12,7 @@ let nvn = 0;
 const geometries = [];
 const gui = new GUI();
 
-const mult = 50;
+const mult = 1000;
 
 function resizeRendererToDisplaySize(renderer) {
 	const canvas = renderer.domElement;
@@ -167,7 +167,7 @@ function main() {
 		color: "red",
 		emissive: "blue",
 		flatShading: true,
-		wireframe: true,
+		// wireframe: true,
 	});
 	const mesh = new THREE.Mesh(mergedGeometry, material);
 	mesh.castShadow = true;
