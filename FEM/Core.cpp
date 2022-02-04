@@ -68,7 +68,7 @@ namespace FEM
 	}
 	void Core::solveES()
 	{
-		this->U = this->K.ldlt().solve(this->S);
+		this->U = this->K.colPivHouseholderQr().solve(this->S);
 	}
 
 } // namespace FEM

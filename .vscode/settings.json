@@ -1,6 +1,3 @@
 {
-	"files.associations": {
-		"iostream": "cpp"
-	}
-	// "cmake.generator": "MinGW Makefiles"
+	"cmake.generator": "MinGW Makefiles"
 }
