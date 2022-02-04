@@ -47,9 +47,9 @@ int main(int argc, char const *argv[])
     O.ensembling();
     O.borderConditions();
     std::cout << "=========================================" << std::endl;
-    Utils::writeToCSVfile("K.csv", O.K);
-    Utils::writeToCSVfile("M.csv", O.M);
-    Utils::writeToCSVfile("S.csv", O.S);
+    // Utils::writeToCSVfile("K.csv", O.K);
+    // Utils::writeToCSVfile("M.csv", O.M);
+    // Utils::writeToCSVfile("S.csv", O.S);
     O.solveES();
     std::cout << "=========================================" << std::endl;
     Utils::writeToCSVfile("U.csv", O.U);

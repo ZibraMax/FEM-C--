@@ -6,8 +6,13 @@ import * as BufferGeometryUtils from "./BufferGeometryUtils.js";
 import { AxisGridHelper, MinMaxGUIHelper, ColorGUIHelper } from "./minigui.js";
 const nodes = [];
 const prisms = [];
+const types = [];
+const disp = [];
+let nvn = 0;
 const geometries = [];
 const gui = new GUI();
+
+const mult = 50;
 
 function resizeRendererToDisplaySize(renderer) {
 	const canvas = renderer.domElement;
@@ -94,6 +99,7 @@ function main() {
 	texture.repeat.set(repeats, repeats);
 
 	const planeGeo = new THREE.PlaneGeometry(planeSize, planeSize);
+	planeGeo.translate(0, 0, 3);
 	const planeMat = new THREE.MeshPhongMaterial({
 		map: texture,
 		side: THREE.DoubleSide,
@@ -106,19 +112,39 @@ function main() {
 
 	const model = new THREE.Object3D();
 
-	const order = [1, 0, 2, 3, 2, 0, 3, 0, 1, 3, 1, 2];
-
 	// Creación de objetos (se podría hacer despues???)
+
 	for (let j = 0; j < prisms.length; j++) {
-		const parent_geometry = new THREE.TetrahedronGeometry(1);
+		let order = undefined;
+		let parent_geometry = undefined;
+		if (types[j] == "B1V") {
+			parent_geometry = new THREE.BoxGeometry(1);
+			order = [
+				6, 2, 5, 1, 3, 7, 0, 4, 3, 2, 7, 6, 4, 5, 0, 1, 7, 6, 4, 5, 2,
+				3, 1, 0,
+			];
+		} else {
+			parent_geometry = new THREE.TetrahedronGeometry(1);
+			order = [1, 0, 2, 3, 2, 0, 3, 0, 1, 3, 1, 2];
+		}
 		const prism = prisms[j];
 
 		const count = parent_geometry.attributes.position.count;
 		for (let i = 0; i < count; i++) {
-			const verticei = nodes[prism[order[i]]];
-			parent_geometry.attributes.position.setX(i, verticei[0]);
-			parent_geometry.attributes.position.setY(i, verticei[1]);
-			parent_geometry.attributes.position.setZ(i, verticei[2]);
+			const gdl = prism[order[i]];
+			const verticei = nodes[gdl];
+			parent_geometry.attributes.position.setX(
+				i,
+				verticei[0] + disp[gdl * 3] * mult
+			);
+			parent_geometry.attributes.position.setY(
+				i,
+				verticei[1] + disp[gdl * 3 + 1] * mult
+			);
+			parent_geometry.attributes.position.setZ(
+				i,
+				verticei[2] + disp[gdl * 3 + 2] * mult
+			);
 		}
 		parent_geometry.attributes.position.needsUpdate = true;
 		parent_geometry.computeVertexNormals();
@@ -141,6 +167,7 @@ function main() {
 		color: "red",
 		emissive: "blue",
 		flatShading: true,
+		wireframe: true,
 	});
 	const mesh = new THREE.Mesh(mergedGeometry, material);
 	mesh.castShadow = true;
@@ -189,13 +216,16 @@ function main() {
 	render();
 }
 
-fetch("./resources/geometry.json")
+fetch("./resources/exported.json")
 	.then((response) => {
 		return response.json();
 	})
 	.then((jsondata) => {
-		nodes.push(...jsondata["coords"]);
-		prisms.push(...jsondata["prisms"]);
+		nodes.push(...jsondata["nodes"]);
+		prisms.push(...jsondata["dictionary"]);
+		types.push(...jsondata["types"]);
+		disp.push(...jsondata["disp_field"]);
+		nvn = jsondata["nvn"];
 		console.log(prisms.length, nodes.length);
 		main();
 	});
