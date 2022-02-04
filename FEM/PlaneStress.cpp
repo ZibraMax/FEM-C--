@@ -91,6 +91,12 @@ namespace FEM
 			e->Fe.segment(m, m) += Fv * this->t;
 
 			std::cout << (double)(ee + 1) / (double)this->geometry->elements.size() << std::endl;
+			if (ee == 0)
+			{
+				Utils::writeToCSVfile("Ke.csv", e->Ke);
+				Utils::writeToCSVfile("Me.csv", e->Me);
+				Utils::writeToCSVfile("Fe.csv", e->Ke);
+			}
 		}
 	}
 
