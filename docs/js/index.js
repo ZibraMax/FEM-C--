@@ -12,7 +12,9 @@ let nvn = 0;
 const geometries = [];
 const gui = new GUI();
 
-const mult = 1000;
+let mult = 0.0;
+let magnif = 1000;
+let time_mult = 1 / 1000;
 
 function resizeRendererToDisplaySize(renderer) {
 	const canvas = renderer.domElement;
@@ -84,7 +86,6 @@ function main() {
 	// scene.background = new THREE.Color(1, 1, 1);
 
 	const controls = new OrbitControls(camera, canvas);
-	controls.addEventListener("change", render);
 	controls.target.set(0, 0, 0);
 	controls.update();
 
@@ -159,7 +160,7 @@ function main() {
 		// model.add(a);
 	}
 
-	const mergedGeometry = BufferGeometryUtils.mergeBufferGeometries(
+	let mergedGeometry = BufferGeometryUtils.mergeBufferGeometries(
 		geometries,
 		false
 	);
@@ -169,7 +170,7 @@ function main() {
 		flatShading: true,
 		// wireframe: true,
 	});
-	const mesh = new THREE.Mesh(mergedGeometry, material);
+	let mesh = new THREE.Mesh(mergedGeometry, material);
 	mesh.castShadow = true;
 	model.add(mesh);
 
@@ -202,18 +203,73 @@ function main() {
 	makeXYZGUI(gui, light.position, "position", updateLight);
 	makeXYZGUI(gui, light.target.position, "target", updateLight);
 
-	function render() {
+	// function render() {
+	// 	if (resizeRendererToDisplaySize(renderer)) {
+	// 		const canvas = renderer.domElement;
+	// 		camera.aspect = canvas.clientWidth / canvas.clientHeight;
+	// 		camera.updateProjectionMatrix();
+	// 	}
+
+	// 	renderer.render(scene, camera);
+	// }
+	// controls.addEventListener("change", render);
+	// render();
+	function render(time) {
+		time = time || 0;
+		mult += (time / 1000) * time_mult;
+		if (mult > 1) {
+			mult = 0;
+		}
+
 		if (resizeRendererToDisplaySize(renderer)) {
 			const canvas = renderer.domElement;
 			camera.aspect = canvas.clientWidth / canvas.clientHeight;
 			camera.updateProjectionMatrix();
 		}
 
+		for (let j = 0; j < geometries.length; j++) {
+			const parent_geometry = geometries[j];
+			let order = undefined;
+			if (types[j] == "B1V") {
+				order = [
+					6, 2, 5, 1, 3, 7, 0, 4, 3, 2, 7, 6, 4, 5, 0, 1, 7, 6, 4, 5,
+					2, 3, 1, 0,
+				];
+			} else {
+				order = [1, 0, 2, 3, 2, 0, 3, 0, 1, 3, 1, 2];
+			}
+			const prism = prisms[j];
+
+			const count = parent_geometry.attributes.position.count;
+			for (let i = 0; i < count; i++) {
+				const gdl = prism[order[i]];
+				const verticei = nodes[gdl];
+				parent_geometry.attributes.position.setX(
+					i,
+					verticei[0] + disp[gdl * 3] * magnif * mult
+				);
+				parent_geometry.attributes.position.setY(
+					i,
+					verticei[1] + disp[gdl * 3 + 1] * magnif * mult
+				);
+				parent_geometry.attributes.position.setZ(
+					i,
+					verticei[2] + disp[gdl * 3 + 2] * magnif * mult
+				);
+			}
+		}
+		// mergedGeometry = BufferGeometryUtils.mergeBufferGeometries(
+		// 	geometries,
+		// 	false
+		// );
+
+		mesh.geometry = mergedGeometry;
 		renderer.render(scene, camera);
+		requestAnimationFrame(render);
 	}
 	window.addEventListener("resize", render);
 
-	render();
+	requestAnimationFrame(render);
 }
 
 fetch("./resources/exported.json")
