@@ -162,7 +162,7 @@ function main() {
 
 	let mergedGeometry = BufferGeometryUtils.mergeBufferGeometries(
 		geometries,
-		false
+		true
 	);
 	const material = new THREE.MeshPhongMaterial({
 		color: "red",
@@ -258,10 +258,11 @@ function main() {
 				);
 			}
 		}
-		// mergedGeometry = BufferGeometryUtils.mergeBufferGeometries(
-		// 	geometries,
-		// 	false
-		// );
+		mergedGeometry.dispose();
+		mergedGeometry = BufferGeometryUtils.mergeBufferGeometries(
+			geometries,
+			false
+		);
 
 		mesh.geometry = mergedGeometry;
 		renderer.render(scene, camera);
