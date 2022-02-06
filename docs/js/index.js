@@ -13,8 +13,8 @@ const geometries = [];
 const gui = new GUI();
 
 let mult = 0.0;
-let magnif = 1000;
-let time_mult = 1 / 1000;
+let magnif = 30;
+let time_mult = 1 / 10000;
 
 function resizeRendererToDisplaySize(renderer) {
 	const canvas = renderer.domElement;
