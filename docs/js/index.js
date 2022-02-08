@@ -10,10 +10,11 @@ const types = [];
 const disp = [];
 let nvn = 0;
 const geometries = [];
+let lines = [];
 const gui = new GUI();
 
 let mult = 0.0;
-let magnif = 30;
+let magnif = 1000;
 let time_mult = 1 / 10000;
 
 function resizeRendererToDisplaySize(renderer) {
@@ -114,9 +115,13 @@ function main() {
 	const model = new THREE.Object3D();
 
 	// Creación de objetos (se podría hacer despues???)
-
+	const line_material = new THREE.LineBasicMaterial({
+		color: "black",
+		linewidth: 3,
+	});
 	for (let j = 0; j < prisms.length; j++) {
 		let order = undefined;
+		let line_order = undefined;
 		let parent_geometry = undefined;
 		if (types[j] == "B1V") {
 			parent_geometry = new THREE.BoxGeometry(1);
@@ -124,6 +129,7 @@ function main() {
 				6, 2, 5, 1, 3, 7, 0, 4, 3, 2, 7, 6, 4, 5, 0, 1, 7, 6, 4, 5, 2,
 				3, 1, 0,
 			];
+			line_order = [0, 1, 2, 3, 0, 4, 5, 1, 5, 6, 2, 6, 7, 3];
 		} else {
 			parent_geometry = new THREE.TetrahedronGeometry(1);
 			order = [1, 0, 2, 3, 2, 0, 3, 0, 1, 3, 1, 2];
@@ -151,13 +157,15 @@ function main() {
 		parent_geometry.computeVertexNormals();
 
 		bufferGeometry(parent_geometry);
-		// const a = makeInstance(parent_geometry, {
-		// 	color: "red",
-		// 	emissive: "blue",
-		// 	wireframe: true,
-		// });
 
-		// model.add(a);
+		const points = [];
+		for (let i = 0; i < line_order.length; i++) {
+			const gdl = prism[line_order[i]];
+			const verticei = nodes[gdl];
+			points.push(new THREE.Vector3(...verticei));
+		}
+		const line_geo = new THREE.BufferGeometry().setFromPoints(points);
+		lines.push(line_geo);
 	}
 
 	let mergedGeometry = BufferGeometryUtils.mergeBufferGeometries(
@@ -170,8 +178,14 @@ function main() {
 		flatShading: true,
 		// wireframe: true,
 	});
+	let mergedLineGeometry = BufferGeometryUtils.mergeBufferGeometries(
+		lines,
+		true
+	);
+	let line = new THREE.Line(mergedLineGeometry, line_material);
+	scene.add(line);
+
 	let mesh = new THREE.Mesh(mergedGeometry, material);
-	mesh.castShadow = true;
 	model.add(mesh);
 
 	scene.add(model);
@@ -183,7 +197,6 @@ function main() {
 	const light = new THREE.DirectionalLight(color, intensity);
 	light.position.set(0, 0, 10);
 	light.target.position.set(-5, 0, 0);
-	light.castShadow = true;
 	scene.add(light);
 	scene.add(light.target);
 
@@ -214,6 +227,7 @@ function main() {
 	// }
 	// controls.addEventListener("change", render);
 	// render();
+	scene.remove(model);
 	function render(time) {
 		time = time || 0;
 		mult += (time / 1000) * time_mult;
@@ -226,15 +240,17 @@ function main() {
 			camera.aspect = canvas.clientWidth / canvas.clientHeight;
 			camera.updateProjectionMatrix();
 		}
-
+		lines = [];
 		for (let j = 0; j < geometries.length; j++) {
 			const parent_geometry = geometries[j];
 			let order = undefined;
+			let line_order = undefined;
 			if (types[j] == "B1V") {
 				order = [
 					6, 2, 5, 1, 3, 7, 0, 4, 3, 2, 7, 6, 4, 5, 0, 1, 7, 6, 4, 5,
 					2, 3, 1, 0,
 				];
+				line_order = [0, 1, 2, 3, 0, 4, 5, 1, 5, 6, 2, 6, 7, 3];
 			} else {
 				order = [1, 0, 2, 3, 2, 0, 3, 0, 1, 3, 1, 2];
 			}
@@ -257,7 +273,23 @@ function main() {
 					verticei[2] + disp[gdl * 3 + 2] * magnif * mult
 				);
 			}
+			const points = [];
+			for (let i = 0; i < line_order.length; i++) {
+				const gdl = prism[line_order[i]];
+				const verticei = nodes[gdl];
+				let vx = verticei[0] + disp[gdl * 3] * magnif * mult;
+				let vy = verticei[1] + disp[gdl * 3 + 1] * magnif * mult;
+				let vz = verticei[2] + disp[gdl * 3 + 2] * magnif * mult;
+				points.push(new THREE.Vector3(vx, vy, vz));
+			}
+			const line_geo = new THREE.BufferGeometry().setFromPoints(points);
+			lines.push(line_geo);
 		}
+		mergedLineGeometry.dispose();
+		mergedLineGeometry = BufferGeometryUtils.mergeBufferGeometries(
+			lines,
+			false
+		);
 		mergedGeometry.dispose();
 		mergedGeometry = BufferGeometryUtils.mergeBufferGeometries(
 			geometries,
@@ -265,6 +297,10 @@ function main() {
 		);
 
 		mesh.geometry = mergedGeometry;
+		line.geometry = mergedLineGeometry;
+
+		// line = new THREE.Line(mergedGeometry, line_material);
+
 		renderer.render(scene, camera);
 		requestAnimationFrame(render);
 	}

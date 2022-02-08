@@ -38,6 +38,15 @@ namespace FEM
 	{
 		// std::vector<std::vector<double>> nbc = this->geometry->nbc;
 		// std::vector<std::vector<double>> ebc = this->geometry->ebc;
+		std::cout<<"--------------------------"<<std::endl;
+
+		for (int i = 0; i < this->geometry->ebc.size(); ++i)
+		{
+			std::cout<<this->geometry->ebc[i][0]<<","<<this->geometry->ebc[i][1]<<std::endl;
+		}
+
+
+		std::cout<<"--------------------------"<<std::endl;
 		for (int i = 0; i < this->geometry->nbc.size(); ++i)
 		{
 			this->Q((int)this->geometry->nbc[i][0]) = this->geometry->nbc[i][1];
