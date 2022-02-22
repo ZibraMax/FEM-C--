@@ -19,7 +19,7 @@ let time_mult = 1;
 let clock = new THREE.Clock();
 let delta = 0;
 // 30 fps
-let interval = 1 / 30;
+let interval = 1 / 120;
 let NODE = 0;
 let disps = [];
 
