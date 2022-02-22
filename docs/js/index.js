@@ -23,6 +23,23 @@ let interval = 1 / 120;
 let NODE = 0;
 let disps = [];
 
+const bl = document.getElementById("bl");
+const br = document.getElementById("br");
+bl.addEventListener(
+	"click",
+	() => {
+		prevMode();
+	},
+	false
+);
+br.addEventListener(
+	"click",
+	() => {
+		nextMode();
+	},
+	false
+);
+
 function resizeRendererToDisplaySize(renderer) {
 	const canvas = renderer.domElement;
 	const width = canvas.clientWidth;
@@ -352,11 +369,15 @@ function onDocumentKeyDown(event) {
 	} else if (keyCode == 37) {
 		prevMode();
 	}
+}
+function updateNodes() {
 	disp = disps[NODE];
 }
 function nextMode() {
 	NODE += 1 * (NODE < disps.length - 1);
+	updateNodes();
 }
 function prevMode() {
 	NODE -= 1 * (NODE > 0);
+	updateNodes();
 }
