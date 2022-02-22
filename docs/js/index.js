@@ -23,6 +23,40 @@ let interval = 1 / 120;
 let NODE = 0;
 let disps = [];
 
+function zoomExtents(camera, object1, orbit) {
+	let vFoV = camera.getEffectiveFOV();
+	let hFoV = camera.fov * camera.aspect;
+
+	let FoV = Math.min(vFoV, hFoV);
+	let FoV2 = FoV / 2;
+
+	let dir = new THREE.Vector3();
+	camera.getWorldDirection(dir);
+
+	let bb = object1.geometry.boundingBox;
+	let bs = object1.geometry.boundingSphere;
+	let bsWorld = bs.center.clone();
+	object1.localToWorld(bsWorld);
+
+	let th = (FoV2 * Math.PI) / 180.0;
+	let sina = Math.sin(th);
+	let R = bs.radius;
+	let FL = R / sina;
+
+	let cameraDir = new THREE.Vector3();
+	camera.getWorldDirection(cameraDir);
+
+	let cameraOffs = cameraDir.clone();
+	cameraOffs.multiplyScalar(-FL);
+	let newCameraPos = bsWorld.clone().add(cameraOffs);
+
+	camera.position.copy(newCameraPos);
+	camera.lookAt(bsWorld);
+	orbit.target.copy(bsWorld);
+
+	orbit.update();
+}
+
 const bl = document.getElementById("bl");
 const br = document.getElementById("br");
 bl.addEventListener(
@@ -95,7 +129,7 @@ function main() {
 	const near = 0.01;
 	const far = 200;
 	const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
-	camera.position.set(0, 0, 25);
+	camera.position.set(25, 25, 25);
 	camera.lookAt(0, 0, 0);
 
 	gui.add(camera, "fov", 1, 180).onChange(updateCamera);
@@ -213,7 +247,7 @@ function main() {
 	model.add(mesh);
 
 	scene.add(model);
-	makeAxisGrid(model, `Model grid`, 3);
+	makeAxisGrid(model, `Model grid`, 0);
 
 	// Luz
 	const color = 0xffffff;
@@ -240,20 +274,7 @@ function main() {
 	makeXYZGUI(gui, light.position, "position", updateLight);
 	makeXYZGUI(gui, light.target.position, "target", updateLight);
 
-	// function render() {
-	// 	if (resizeRendererToDisplaySize(renderer)) {
-	// 		const canvas = renderer.domElement;
-	// 		camera.aspect = canvas.clientWidth / canvas.clientHeight;
-	// 		camera.updateProjectionMatrix();
-	// 	}
-
-	// 	renderer.render(scene, camera);
-	// }
-	// controls.addEventListener("change", render);
-	// render();
-	// scene.remove(model);
 	function update(time) {
-		// console.log(disp);
 		requestAnimationFrame(update);
 		delta += clock.getDelta();
 		if (delta > interval) {
@@ -264,9 +285,11 @@ function main() {
 		}
 	}
 	function render(time) {
-		time = time || 0;
-		// console.log(time);
-
+		if (typeof time == "number") {
+			time = time || 0;
+		} else {
+			time = 0.0;
+		}
 		mult += time * time_mult * side;
 		if (mult > 1) {
 			side = -1.0;
@@ -343,6 +366,8 @@ function main() {
 		renderer.render(scene, camera);
 		// requestAnimationFrame(render);
 	}
+	// mesh.geometry.computeBoundingBox();
+	zoomExtents(camera, mesh, controls);
 	window.addEventListener("resize", render);
 
 	requestAnimationFrame(update);
