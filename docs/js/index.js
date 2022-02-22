@@ -179,7 +179,7 @@ function main() {
 		true
 	);
 	const material = new THREE.MeshPhongMaterial({
-		color: "red",
+		color: "#c4bbfc",
 		emissive: "blue",
 		flatShading: true,
 		// wireframe: true,
