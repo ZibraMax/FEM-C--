@@ -370,8 +370,10 @@ function onDocumentKeyDown(event) {
 		prevMode();
 	}
 }
+const nodoTexto = document.getElementById("textNodo");
 function updateNodes() {
 	disp = disps[NODE];
+	nodoTexto.innerHTML = `Modo ${NODE + 1}`;
 }
 function nextMode() {
 	NODE += 1 * (NODE < disps.length - 1);
