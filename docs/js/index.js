@@ -7,15 +7,21 @@ import { AxisGridHelper, MinMaxGUIHelper, ColorGUIHelper } from "./minigui.js";
 const nodes = [];
 const prisms = [];
 const types = [];
-const disp = [];
+let disp = [];
 let nvn = 0;
 const geometries = [];
 let lines = [];
 const gui = new GUI();
-
-let mult = 0.0;
-let magnif = 1000;
-let time_mult = 1 / 10000;
+let side = 1.0;
+let mult = -1.0;
+let magnif = 5;
+let time_mult = 1;
+let clock = new THREE.Clock();
+let delta = 0;
+// 30 fps
+let interval = 1 / 30;
+let NODE = 0;
+let disps = [];
 
 function resizeRendererToDisplaySize(renderer) {
 	const canvas = renderer.domElement;
@@ -84,7 +90,7 @@ function main() {
 		.onChange(updateCamera);
 
 	const scene = new THREE.Scene();
-	// scene.background = new THREE.Color(1, 1, 1);
+	scene.background = new THREE.Color(1, 1, 1);
 
 	const controls = new OrbitControls(camera, canvas);
 	controls.target.set(0, 0, 0);
@@ -101,7 +107,7 @@ function main() {
 	texture.repeat.set(repeats, repeats);
 
 	const planeGeo = new THREE.PlaneGeometry(planeSize, planeSize);
-	planeGeo.translate(0, 0, 3);
+	planeGeo.translate(0, 0, 8);
 	const planeMat = new THREE.MeshPhongMaterial({
 		map: texture,
 		side: THREE.DoubleSide,
@@ -227,12 +233,27 @@ function main() {
 	// }
 	// controls.addEventListener("change", render);
 	// render();
-	scene.remove(model);
+	// scene.remove(model);
+	function update(time) {
+		// console.log(disp);
+		requestAnimationFrame(update);
+		delta += clock.getDelta();
+		if (delta > interval) {
+			// The draw or time dependent code are here
+			render(delta);
+
+			delta = delta % interval;
+		}
+	}
 	function render(time) {
 		time = time || 0;
-		mult += (time / 1000) * time_mult;
+		// console.log(time);
+
+		mult += time * time_mult * side;
 		if (mult > 1) {
-			mult = 0;
+			side = -1.0;
+		} else if (mult < -1) {
+			side = 1.0;
 		}
 
 		if (resizeRendererToDisplaySize(renderer)) {
@@ -302,13 +323,12 @@ function main() {
 		// line = new THREE.Line(mergedGeometry, line_material);
 
 		renderer.render(scene, camera);
-		requestAnimationFrame(render);
+		// requestAnimationFrame(render);
 	}
 	window.addEventListener("resize", render);
 
-	requestAnimationFrame(render);
+	requestAnimationFrame(update);
 }
-
 fetch("./resources/exported.json")
 	.then((response) => {
 		return response.json();
@@ -317,8 +337,26 @@ fetch("./resources/exported.json")
 		nodes.push(...jsondata["nodes"]);
 		prisms.push(...jsondata["dictionary"]);
 		types.push(...jsondata["types"]);
-		disp.push(...jsondata["disp_field"]);
+		disps.push(...jsondata["disp_field"]);
+		disp = disps[NODE];
 		nvn = jsondata["nvn"];
 		console.log(prisms.length, nodes.length);
 		main();
 	});
+document.addEventListener("keydown", onDocumentKeyDown, false);
+function onDocumentKeyDown(event) {
+	const keyCode = event.which;
+	console.log(NODE);
+	if (keyCode == 39) {
+		nextMode();
+	} else if (keyCode == 37) {
+		prevMode();
+	}
+	disp = disps[NODE];
+}
+function nextMode() {
+	NODE += 1 * (NODE < disps.length - 1);
+}
+function prevMode() {
+	NODE -= 1 * (NODE > 0);
+}
