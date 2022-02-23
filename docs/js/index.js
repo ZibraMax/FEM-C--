@@ -14,7 +14,7 @@ let lines = [];
 const gui = new GUI();
 let side = 1.0;
 let mult = -1.0;
-let magnif = 5;
+let magnif = 10;
 let time_mult = 1;
 let clock = new THREE.Clock();
 let delta = 0;
@@ -134,7 +134,7 @@ function main() {
 	floor.rotation.x = Math.PI;
 	floor.receiveShadow = true;
 
-	scene.add(floor);
+	// scene.add(floor);
 
 	const model = new THREE.Object3D();
 
@@ -347,7 +347,7 @@ function main() {
 
 	requestAnimationFrame(update);
 }
-fetch("./resources/exported.json")
+fetch("./resources/exported2.json")
 	.then((response) => {
 		return response.json();
 	})
