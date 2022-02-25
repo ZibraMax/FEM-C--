@@ -374,7 +374,7 @@ function main() {
 
 	requestAnimationFrame(update);
 }
-let path = "./resources/exported1.json";
+let path = "./resources/exported.json";
 magnif = 5;
 let queryString = window.location.search;
 if (queryString != "") {
