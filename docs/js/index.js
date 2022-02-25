@@ -14,7 +14,7 @@ let lines = [];
 const gui = new GUI();
 let side = 1.0;
 let mult = -1.0;
-let magnif = 10;
+let magnif = 1000;
 let time_mult = 1;
 let clock = new THREE.Clock();
 let delta = 0;
@@ -191,6 +191,7 @@ function main() {
 		} else {
 			parent_geometry = new THREE.TetrahedronGeometry(1);
 			order = [1, 0, 2, 3, 2, 0, 3, 0, 1, 3, 1, 2];
+			line_order = [0, 1, 2, 0, 3, 1, 3, 2];
 		}
 		const prism = prisms[j];
 
@@ -315,6 +316,7 @@ function main() {
 				line_order = [0, 1, 2, 3, 0, 4, 5, 1, 5, 6, 2, 6, 7, 3];
 			} else {
 				order = [1, 0, 2, 3, 2, 0, 3, 0, 1, 3, 1, 2];
+				line_order = [0, 1, 2, 0, 3, 1, 3, 2];
 			}
 			const prism = prisms[j];
 
@@ -372,7 +374,21 @@ function main() {
 
 	requestAnimationFrame(update);
 }
-fetch("./resources/exported2.json")
+let path = "./resources/exported1.json";
+magnif = 5;
+let queryString = window.location.search;
+if (queryString != "") {
+	queryString = queryString.split("?")[1];
+	let parametros = new URLSearchParams(queryString);
+	let funcion_param = parametros.get("mesh");
+	if (funcion_param == "SPHERE") {
+		path = "./resources/SPHERE.json";
+	} else if (funcion_param == "PIRAMID") {
+		path = "./resources/exported2.json";
+		magnif = 10;
+	}
+}
+fetch(path)
 	.then((response) => {
 		return response.json();
 	})
@@ -380,8 +396,14 @@ fetch("./resources/exported2.json")
 		nodes.push(...jsondata["nodes"]);
 		prisms.push(...jsondata["dictionary"]);
 		types.push(...jsondata["types"]);
-		disps.push(...jsondata["disp_field"]);
+		if (jsondata["disp_field"] == undefined) {
+			disps = [Array(nodes.length * 3).fill(0.0)];
+		} else {
+			disps.push(...jsondata["disp_field"]);
+		}
 		disp = disps[NODE];
+		console.log(disps);
+		console.log(disp);
 		nvn = jsondata["nvn"];
 		console.log(prisms.length, nodes.length);
 		main();
