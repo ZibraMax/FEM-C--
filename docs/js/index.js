@@ -374,20 +374,23 @@ function main() {
 
 	requestAnimationFrame(update);
 }
-let path = "./resources/exported.json";
+let path_str = "CUBE";
 magnif = 5;
 let queryString = window.location.search;
 if (queryString != "") {
 	queryString = queryString.split("?")[1];
 	let parametros = new URLSearchParams(queryString);
 	let funcion_param = parametros.get("mesh");
-	if (funcion_param == "SPHERE") {
-		path = "./resources/SPHERE.json";
-	} else if (funcion_param == "PIRAMID") {
-		path = "./resources/exported2.json";
-		magnif = 10;
+	let magnif_param = parametros.get("magnif");
+	if (funcion_param) {
+		path_str = funcion_param;
+	}
+	if (magnif_param) {
+		magnif = parseFloat(magnif_param);
 	}
 }
+let path = `./resources/${path_str}.json`;
+
 fetch(path)
 	.then((response) => {
 		return response.json();
@@ -402,8 +405,6 @@ fetch(path)
 			disps.push(...jsondata["disp_field"]);
 		}
 		disp = disps[NODE];
-		console.log(disps);
-		console.log(disp);
 		nvn = jsondata["nvn"];
 		console.log(prisms.length, nodes.length);
 		main();
