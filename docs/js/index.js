@@ -88,7 +88,7 @@ function resizeRendererToDisplaySize(renderer) {
 
 function makeAxisGrid(node, label, units) {
 	const helper = new AxisGridHelper(node, units);
-	gui.add(helper, "visible").name(label);
+	// gui.add(helper, "visible").name(label);
 }
 
 function makeXYZGUI(gui, vector3, name, onChangeFn) {
@@ -132,14 +132,14 @@ function main() {
 	camera.position.set(25, 25, 25);
 	camera.lookAt(0, 0, 0);
 
-	gui.add(camera, "fov", 1, 180).onChange(updateCamera);
-	const minMaxGUIHelper = new MinMaxGUIHelper(camera, "near", "far", 0.1);
-	gui.add(minMaxGUIHelper, "min", 0.1, 1000, 0.1)
-		.name("near")
-		.onChange(updateCamera);
-	gui.add(minMaxGUIHelper, "max", 0.1, 1000, 0.1)
-		.name("far")
-		.onChange(updateCamera);
+	// gui.add(camera, "fov", 1, 180).onChange(updateCamera);
+	// const minMaxGUIHelper = new MinMaxGUIHelper(camera, "near", "far", 0.1);
+	// gui.add(minMaxGUIHelper, "min", 0.1, 1000, 0.1)
+	// 	.name("near")
+	// 	.onChange(updateCamera);
+	// gui.add(minMaxGUIHelper, "max", 0.1, 1000, 0.1)
+	// 	.name("far")
+	// 	.onChange(updateCamera);
 
 	const scene = new THREE.Scene();
 	scene.background = new THREE.Color(1, 1, 1);
@@ -231,12 +231,41 @@ function main() {
 		geometries,
 		true
 	);
-	const material = new THREE.MeshPhongMaterial({
+	let material = new THREE.MeshPhongMaterial({
 		color: "#c4bbfc",
 		emissive: "blue",
 		flatShading: true,
-		// wireframe: true,
 	});
+
+	var actv = new (function () {
+		this.Activate_Colors = false;
+	})();
+
+	function updateMaterial() {
+		console.log(actv.Activate_Colors);
+		if (actv.Activate_Colors) {
+			material = new THREE.MeshPhongMaterial({
+				// color: "#c4bbfc",
+				// emissive: "yellow",
+				// emissiveIntensity: 0.5,
+				flatShading: true,
+				// emissive: "c4bbfc",
+				vertexColors: true,
+				// wireframe: true,
+			});
+			light2.intensity = 1.0;
+			light.intensity = 0.0;
+		} else {
+			material = new THREE.MeshPhongMaterial({
+				color: "#c4bbfc",
+				emissive: "blue",
+				flatShading: true,
+			});
+			light2.intensity = 0.0;
+			light.intensity = 1.0;
+		}
+	}
+
 	let mergedLineGeometry = BufferGeometryUtils.mergeBufferGeometries(
 		lines,
 		true
@@ -251,12 +280,14 @@ function main() {
 	makeAxisGrid(model, `Model grid`, 0);
 
 	// Luz
+	const light2 = new THREE.AmbientLight(0xffffff, 0.0);
 	const color = 0xffffff;
 	const intensity = 1;
 	const light = new THREE.DirectionalLight(color, intensity);
 	light.position.set(0, 0, 10);
 	light.target.position.set(-5, 0, 0);
 	scene.add(light);
+	scene.add(light2);
 	scene.add(light.target);
 
 	const helper = new THREE.DirectionalLightHelper(light);
@@ -269,11 +300,14 @@ function main() {
 	}
 	updateLight();
 
-	gui.addColor(new ColorGUIHelper(light, "color"), "value").name("color");
-	gui.add(light, "intensity", 0, 2, 0.01);
+	gui.add(camera, "fov", 1, 180).onChange(updateCamera);
+	gui.add(actv, "Activate_Colors").onChange(updateMaterial);
 
-	makeXYZGUI(gui, light.position, "position", updateLight);
-	makeXYZGUI(gui, light.target.position, "target", updateLight);
+	// gui.addColor(new ColorGUIHelper(light, "color"), "value").name("color");
+	// gui.add(light, "intensity", 0, 2, 0.01);
+
+	// makeXYZGUI(gui, light.position, "position", updateLight);
+	// makeXYZGUI(gui, light.target.position, "target", updateLight);
 
 	function update(time) {
 		requestAnimationFrame(update);
@@ -321,6 +355,7 @@ function main() {
 			const prism = prisms[j];
 
 			const count = parent_geometry.attributes.position.count;
+			let max_disp_nodes = 0.0;
 			for (let i = 0; i < count; i++) {
 				const gdl = prism[order[i]];
 				const verticei = nodes[gdl];
@@ -336,7 +371,41 @@ function main() {
 					i,
 					verticei[2] + disp[gdl * 3 + 2] * magnif * mult
 				);
+				max_disp_nodes = Math.max(
+					max_disp_nodes,
+					disp[gdl * 3 + 1] * mult,
+					disp[gdl * 3 + 1] * mult,
+					disp[gdl * 3 + 2] * mult
+				);
 			}
+			//geometry color
+			const color = new THREE.Color();
+			let amount = max_disp_nodes / max_disp;
+			amount = Math.min(amount, 1.0);
+			const hue = THREE.MathUtils.lerp(248 / 360, 184 / 360, amount);
+			const saturation = 1.0;
+			const lightness = 0.6;
+			color.setHSL(hue, saturation, lightness);
+			// get the colors as an array of values from 0 to 255
+			const rgb = color.toArray().map((v) => v * 255);
+
+			// make an array to store colors for each vertex
+			const numVerts = parent_geometry.getAttribute("position").count;
+			const itemSize = 3; // r, g, b
+			const colors = new Uint8Array(itemSize * numVerts);
+
+			// copy the color into the colors array for each vertex
+			colors.forEach((v, ndx) => {
+				colors[ndx] = rgb[ndx % 3];
+			});
+
+			const normalized = true;
+			const colorAttrib = new THREE.BufferAttribute(
+				colors,
+				itemSize,
+				normalized
+			);
+			parent_geometry.setAttribute("color", colorAttrib);
 			const points = [];
 			for (let i = 0; i < line_order.length; i++) {
 				const gdl = prism[line_order[i]];
@@ -361,6 +430,9 @@ function main() {
 		);
 
 		mesh.geometry = mergedGeometry;
+		mesh.material = material;
+		mesh.material.needsUpdate = true;
+		// console.log(mesh.material);
 		line.geometry = mergedLineGeometry;
 
 		// line = new THREE.Line(mergedGeometry, line_material);
@@ -374,6 +446,7 @@ function main() {
 
 	requestAnimationFrame(update);
 }
+let max_disp = 0.0;
 let path_str = "CUBE";
 magnif = 5;
 let queryString = window.location.search;
@@ -405,6 +478,8 @@ fetch(path)
 			disps.push(...jsondata["disp_field"]);
 		}
 		disp = disps[NODE];
+		max_disp = Math.max(...disp);
+		console.log(max_disp);
 		nvn = jsondata["nvn"];
 		console.log(prisms.length, nodes.length);
 		main();
@@ -422,6 +497,7 @@ function onDocumentKeyDown(event) {
 const nodoTexto = document.getElementById("textNodo");
 function updateNodes() {
 	disp = disps[NODE];
+	max_disp = Math.max(...disp);
 	nodoTexto.innerHTML = `Modo ${NODE + 1}`;
 }
 function nextMode() {
