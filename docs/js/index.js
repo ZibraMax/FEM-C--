@@ -188,10 +188,24 @@ function main() {
 				3, 1, 0,
 			];
 			line_order = [0, 1, 2, 3, 0, 4, 5, 1, 5, 6, 2, 6, 7, 3];
-		} else {
+		} else if (types[j] == "T1V") {
 			parent_geometry = new THREE.TetrahedronGeometry(1);
 			order = [1, 0, 2, 3, 2, 0, 3, 0, 1, 3, 1, 2];
 			line_order = [0, 1, 2, 0, 3, 1, 3, 2];
+		} else if (types[j] == "L1V") {
+			parent_geometry = new THREE.BoxGeometry(1);
+			order = [
+				1, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0,
+				0, 0, 0,
+			];
+			line_order = [0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0];
+		} else if (types[j] == "T1V" || types[j] == "T2V") {
+			parent_geometry = new THREE.BoxGeometry(1);
+			order = [
+				2, 1, 2, 1, 0, 2, 0, 2, 0, 1, 2, 2, 2, 2, 0, 1, 2, 2, 2, 2, 1,
+				0, 1, 0,
+			];
+			line_order = [0, 1, 1, 0, 0, 2, 2, 1, 2, 2, 1, 2, 2, 0];
 		}
 		const prism = prisms[j];
 
@@ -239,6 +253,8 @@ function main() {
 
 	var actv = new (function () {
 		this.Activate_Colors = false;
+		this.Animation = true;
+		this.magnif = magnif;
 	})();
 
 	function updateMaterial() {
@@ -300,8 +316,18 @@ function main() {
 	}
 	updateLight();
 
-	gui.add(camera, "fov", 1, 180).onChange(updateCamera);
-	gui.add(actv, "Activate_Colors").onChange(updateMaterial);
+	function updateMagnif() {
+		magnif = actv.magnif;
+	}
+
+	gui.add(camera, "fov", 1, 180).name("Camera FOV").onChange(updateCamera);
+	gui.add(actv, "Activate_Colors")
+		.name("Draw Colors")
+		.onChange(updateMaterial);
+	gui.add(actv, "Animation").name("Animation");
+	gui.add(actv, "magnif", 0, 1000)
+		.name("Disp multiplier")
+		.onChange(updateMagnif);
 
 	// gui.addColor(new ColorGUIHelper(light, "color"), "value").name("color");
 	// gui.add(light, "intensity", 0, 2, 0.01);
@@ -331,6 +357,9 @@ function main() {
 		} else if (mult < -1) {
 			side = 1.0;
 		}
+		if (!actv.Animation) {
+			mult = 1.0;
+		}
 
 		if (resizeRendererToDisplaySize(renderer)) {
 			const canvas = renderer.domElement;
@@ -342,16 +371,126 @@ function main() {
 			const parent_geometry = geometries[j];
 			let order = undefined;
 			let line_order = undefined;
+			let modifier = undefined;
 			if (types[j] == "B1V") {
 				order = [
 					6, 2, 5, 1, 3, 7, 0, 4, 3, 2, 7, 6, 4, 5, 0, 1, 7, 6, 4, 5,
 					2, 3, 1, 0,
 				];
 				line_order = [0, 1, 2, 3, 0, 4, 5, 1, 5, 6, 2, 6, 7, 3];
-			} else {
+				let h = 0.0;
+				modifier = [
+					[0.0, h, h],
+					[0.0, h, h],
+					[0.0, h, 0.0],
+					[0.0, h, 0.0],
+					[0.0, 0.0, h],
+					[0.0, 0.0, h],
+					[0.0, 0.0, 0.0],
+					[0.0, 0.0, 0.0],
+					[0.0, 0.0, h],
+					[0.0, h, h],
+					[0.0, 0.0, h],
+					[0.0, h, h],
+					[0.0, 0.0, 0.0],
+					[0.0, h, 0.0],
+					[0.0, 0.0, 0.0],
+					[0.0, h, 0.0],
+					[0.0, 0.0, h],
+					[0.0, h, h],
+					[0.0, 0.0, 0.0],
+					[0.0, h, 0.0],
+					[0.0, h, h],
+					[0.0, 0.0, h],
+					[0.0, h, 0.0],
+					[0.0, 0.0, 0.0],
+				];
+			} else if (types[j] == "T1V") {
 				order = [1, 0, 2, 3, 2, 0, 3, 0, 1, 3, 1, 2];
 				line_order = [0, 1, 2, 0, 3, 1, 3, 2];
+				let h = 0.0;
+				modifier = [
+					[0.0, h, h],
+					[0.0, h, h],
+					[0.0, h, 0.0],
+					[0.0, h, 0.0],
+					[0.0, 0.0, h],
+					[0.0, 0.0, h],
+					[0.0, 0.0, 0.0],
+					[0.0, 0.0, 0.0],
+					[0.0, 0.0, h],
+					[0.0, h, h],
+					[0.0, 0.0, h],
+					[0.0, h, h],
+				];
+			} else if (types[j] == "L1V") {
+				order = [
+					1, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1,
+					0, 0, 0, 0,
+				];
+				line_order = [0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0];
+				const h = tama / 10.0;
+				modifier = [
+					[0.0, h, h],
+					[0.0, h, h],
+					[0.0, h, 0.0],
+					[0.0, h, 0.0],
+					[0.0, 0.0, h],
+					[0.0, 0.0, h],
+					[0.0, 0.0, 0.0],
+					[0.0, 0.0, 0.0],
+					[0.0, 0.0, h],
+					[0.0, h, h],
+					[0.0, 0.0, h],
+					[0.0, h, h],
+					[0.0, 0.0, 0.0],
+					[0.0, h, 0.0],
+					[0.0, 0.0, 0.0],
+					[0.0, h, 0.0],
+					[0.0, 0.0, h],
+					[0.0, h, h],
+					[0.0, 0.0, 0.0],
+					[0.0, h, 0.0],
+					[0.0, h, h],
+					[0.0, 0.0, h],
+					[0.0, h, 0.0],
+					[0.0, 0.0, 0.0],
+				];
+			} else if (types[j] == "T1V" || types[j] == "T2V") {
+				order = [
+					2, 1, 2, 1, 0, 2, 0, 2, 0, 1, 2, 2, 2, 2, 0, 1, 2, 2, 2, 2,
+					1, 0, 1, 0,
+				];
+				line_order = [0, 1, 1, 0, 0, 2, 2, 1, 2, 2, 1, 2, 2, 0];
+				const h = tama / 10.0;
+				modifier = [
+					[0.0, 0.0, h],
+					[0.0, 0.0, h],
+					[0.0, 0.0, 0.0],
+					[0.0, 0.0, 0.0],
+					[0.0, 0.0, h],
+					[0.0, 0.0, h],
+					[0.0, 0.0, 0.0],
+					[0.0, 0.0, 0.0],
+					[0.0, 0.0, h],
+					[0.0, 0.0, h],
+					[0.0, 0.0, h],
+					[0.0, 0.0, h],
+					[0.0, 0.0, 0.0],
+					[0.0, 0.0, 0.0],
+					[0.0, 0.0, 0.0],
+					[0.0, 0.0, 0.0],
+					[0.0, 0.0, h],
+					[0.0, 0.0, h],
+					[0.0, 0.0, 0.0],
+					[0.0, 0.0, 0.0],
+					[0.0, 0.0, h],
+					[0.0, 0.0, h],
+					[0.0, 0.0, 0.0],
+					[0.0, 0.0, 0.0],
+				];
 			}
+
 			const prism = prisms[j];
 
 			const count = parent_geometry.attributes.position.count;
@@ -361,21 +500,25 @@ function main() {
 				const verticei = nodes[gdl];
 				parent_geometry.attributes.position.setX(
 					i,
-					verticei[0] + disp[gdl * 3] * magnif * mult
+					verticei[0] + modifier[i][0] + disp[gdl * 3] * magnif * mult
 				);
 				parent_geometry.attributes.position.setY(
 					i,
-					verticei[1] + disp[gdl * 3 + 1] * magnif * mult
+					verticei[1] +
+						modifier[i][1] +
+						disp[gdl * 3 + 1] * magnif * mult
 				);
 				parent_geometry.attributes.position.setZ(
 					i,
-					verticei[2] + disp[gdl * 3 + 2] * magnif * mult
+					verticei[2] +
+						modifier[i][2] +
+						disp[gdl * 3 + 2] * magnif * mult
 				);
 				max_disp_nodes = Math.max(
 					max_disp_nodes,
-					disp[gdl * 3 + 1] * mult,
-					disp[gdl * 3 + 1] * mult,
-					disp[gdl * 3 + 2] * mult
+					disp[gdl * 3 + 1] * Math.abs(mult),
+					disp[gdl * 3 + 1] * Math.abs(mult),
+					disp[gdl * 3 + 2] * Math.abs(mult)
 				);
 			}
 			//geometry color
@@ -463,13 +606,18 @@ if (queryString != "") {
 	}
 }
 let path = `./resources/${path_str}.json`;
-
+let tama = 0.0;
 fetch(path)
 	.then((response) => {
 		return response.json();
 	})
 	.then((jsondata) => {
 		nodes.push(...jsondata["nodes"]);
+		for (let i = 0; i < nodes.length; i++) {
+			for (let j = 0; j <= 3 - nodes[i].length; j++) {
+				nodes[i].push(0.0);
+			}
+		}
 		prisms.push(...jsondata["dictionary"]);
 		types.push(...jsondata["types"]);
 		if (jsondata["disp_field"] == undefined) {
@@ -479,7 +627,8 @@ fetch(path)
 		}
 		disp = disps[NODE];
 		max_disp = Math.max(...disp);
-		console.log(max_disp);
+		tama = Math.max(...nodes.flat()) - Math.min(...nodes.flat());
+		console.log(tama);
 		nvn = jsondata["nvn"];
 		console.log(prisms.length, nodes.length);
 		main();
