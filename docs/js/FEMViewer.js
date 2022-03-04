@@ -769,7 +769,7 @@ class FEMViewer {
 		this.dictionary.push(...jsondata["dictionary"]);
 		this.types.push(...jsondata["types"]);
 		if (jsondata["disp_field"] == undefined) {
-			this.solutions = [Array(this.nodes.length * nvn).fill(0.0)];
+			this.solutions = [Array(this.nodes.length * this.nvn).fill(0.0)];
 		} else {
 			this.solutions.push(...jsondata["disp_field"]);
 		}
