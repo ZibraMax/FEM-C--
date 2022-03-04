@@ -24,7 +24,7 @@ class Element {
 			this.Ue.push(u);
 		}
 	}
-	setGeometryCoords(Ue, mult, parent_geometry) {
+	setGeometryCoords(Ue, mult, parent_geometry, line_geometry) {
 		if (!Ue) {
 			Ue = [];
 			const a = Array(this.coords.length).fill(0.0);
@@ -40,7 +40,7 @@ class Element {
 		if (!parent_geometry) {
 			parent_geometry = this.geometry;
 		}
-		const count = parent_geometry.attributes.position.count;
+		let count = parent_geometry.attributes.position.count;
 		for (let i = 0; i < count; i++) {
 			const node = this.order[i];
 			const verticei = this.coords[node];
@@ -59,6 +59,28 @@ class Element {
 		}
 		parent_geometry.attributes.position.needsUpdate = true;
 		parent_geometry.computeVertexNormals();
+
+		if (line_geometry) {
+			count = line_geometry.attributes.position.count;
+			for (let i = 0; i < count; i++) {
+				const node = this.line_order[i];
+				const verticei = this.coords[node];
+				line_geometry.attributes.position.setX(
+					i,
+					verticei[0] + this.modifier[i][0] + Ue[0][node] * mult
+				);
+				line_geometry.attributes.position.setY(
+					i,
+					verticei[1] + this.modifier[i][1] + Ue[1][node] * mult
+				);
+				line_geometry.attributes.position.setZ(
+					i,
+					verticei[2] + this.modifier[i][2] + Ue[2][node] * mult
+				);
+			}
+			line_geometry.attributes.position.needsUpdate = true;
+			line_geometry.computeVertexNormals();
+		}
 	}
 }
 class Element3D extends Element {
@@ -464,6 +486,7 @@ class FEMViewer {
 		this.interval = 1 / 120;
 		this.clock = new THREE.Clock();
 		this.bufferGeometries = [];
+		this.bufferLines = [];
 		this.model = new THREE.Object3D();
 		this.colors = false;
 		this.animate = true;
@@ -605,7 +628,8 @@ class FEMViewer {
 			e.setGeometryCoords(
 				Ue,
 				this.magnif * this.mult,
-				this.bufferGeometries[i]
+				this.bufferGeometries[i],
+				this.bufferLines[i]
 			);
 			let max_disp_nodes = 0.0;
 			for (const ue of e.Ue) {
@@ -652,6 +676,13 @@ class FEMViewer {
 		this.mesh.geometry = this.mergedGeometry;
 		this.mesh.material = this.material;
 		this.mesh.material.needsUpdate = true;
+
+		this.mergedLineGeometry.dispose();
+		this.mergedLineGeometry = BufferGeometryUtils.mergeBufferGeometries(
+			this.bufferLines,
+			false
+		);
+		this.contour.geometry = this.mergedLineGeometry;
 
 		if (this.resizeRendererToDisplaySize()) {
 			const canvas = this.renderer.domElement;
@@ -705,6 +736,17 @@ class FEMViewer {
 			emissive: "blue",
 			flatShading: true,
 		});
+		const line_material = new THREE.LineBasicMaterial({
+			color: "black",
+			linewidth: 3,
+		});
+		this.mergedLineGeometry = BufferGeometryUtils.mergeBufferGeometries(
+			this.bufferLines,
+			true
+		);
+		this.contour = new THREE.Line(this.mergedLineGeometry, line_material);
+		this.model.add(this.contour);
+
 		this.mesh = new THREE.Mesh(this.mergedGeometry, this.material);
 		this.model.add(this.mesh);
 		new AxisGridHelper(this.model, 0);
@@ -737,6 +779,7 @@ class FEMViewer {
 		console.log(this.size);
 		console.log(this.dictionary.length, this.nodes.length);
 		this.createElements();
+		this.createLines();
 	}
 
 	updateU() {
@@ -780,6 +823,19 @@ class FEMViewer {
 			this.elements[i].setUe(this.U);
 			this.elements[i].setGeometryCoords();
 			this.bufferGeometries.push(this.elements[i].geometry);
+		}
+	}
+	createLines() {
+		for (const e of this.elements) {
+			const points = [];
+			const count = e.line_order.length;
+			for (let j = 0; j < count; j++) {
+				const node = e.line_order[j];
+				const verticei = e.coords[node];
+				points.push(new THREE.Vector3(...verticei));
+			}
+			const line_geo = new THREE.BufferGeometry().setFromPoints(points);
+			this.bufferLines.push(line_geo);
 		}
 	}
 }
