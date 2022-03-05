@@ -773,8 +773,6 @@ class FEMViewer {
 		this.updateU();
 		this.size =
 			Math.max(...this.nodes.flat()) - Math.min(...this.nodes.flat());
-		console.log(this.size);
-		console.log(this.dictionary.length, this.nodes.length);
 		this.createElements();
 		this.createLines();
 	}
