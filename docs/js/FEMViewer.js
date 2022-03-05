@@ -199,12 +199,9 @@ class Tetrahedral extends Element3D {
 	line_order;
 	constructor(coords, gdls) {
 		super(coords, gdls);
-		this.geometry = new THREE.BoxGeometry(1);
-		this.order = [
-			6, 2, 5, 1, 3, 7, 0, 4, 3, 2, 7, 6, 4, 5, 0, 1, 7, 6, 4, 5, 2, 3, 1,
-			0,
-		];
-		this.line_order = [0, 1, 2, 3, 0, 4, 5, 1, 5, 6, 2, 6, 7, 3];
+		this.geometry = new THREE.TetrahedronGeometry(1);
+		this.order = [1, 0, 2, 3, 2, 0, 3, 0, 1, 3, 1, 2];
+		this.line_order = [0, 1, 2, 0, 3, 1, 3, 2];
 		this.modifier = [
 			[0.0, 0.0, 0.0],
 			[0.0, 0.0, 0.0],
