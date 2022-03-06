@@ -791,13 +791,11 @@ class FEMViewer {
 		const norm = 1.0 / Math.max(...jsondata["nodes"].flat());
 		// console.log(norm);
 		this.nodes.push(...jsondata["nodes"]);
-		this.size =
-			Math.max(...this.nodes.flat()) - Math.min(...this.nodes.flat());
+
 		for (let i = 0; i < this.nodes.length; i++) {
 			const node = this.nodes[i];
 			for (let j = 0; j < node.length; j++) {
 				this.nodes[i][j] *= norm;
-				this.nodes[i][j] -= this.size / 2;
 			}
 		}
 		this.nvn = jsondata["nvn"];
@@ -818,6 +816,27 @@ class FEMViewer {
 				this.solutions[s][i] *= norm;
 			}
 		}
+
+		const secon_coords = this.nodes[0].map((_, colIndex) =>
+			this.nodes.map((row) => row[colIndex])
+		);
+
+		let sizex =
+			Math.max(...secon_coords[0].flat()) -
+			Math.min(...secon_coords[0].flat());
+		let sizey =
+			Math.max(...secon_coords[1].flat()) -
+			Math.min(...secon_coords[1].flat());
+		let sizez =
+			Math.max(...secon_coords[2].flat()) -
+			Math.min(...secon_coords[2].flat());
+		for (let i = 0; i < this.nodes.length; i++) {
+			this.nodes[i][0] -= sizex / 2;
+			this.nodes[i][1] -= sizey / 2;
+			this.nodes[i][2] -= sizez / 2;
+		}
+		this.size =
+			Math.max(...this.nodes.flat()) - Math.min(...this.nodes.flat());
 		this.updateU();
 		this.createElements();
 		this.createLines();
