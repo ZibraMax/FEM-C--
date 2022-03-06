@@ -479,6 +479,7 @@ class FEMViewer {
 
 		// THREE JS
 		this.renderer = new THREE.WebGLRenderer({ canvas });
+		this.renderer.localClippingEnabled = true;
 		this.delta = 0;
 		this.interval = 1 / 120;
 		this.clock = new THREE.Clock();
@@ -491,6 +492,7 @@ class FEMViewer {
 		this.mult = 1.0;
 		this.side = 1.0;
 		this.max_disp = 0.0;
+		this.draw_lines = false;
 
 		this.gui = new GUI({ title: "Configuraciones" });
 		this.settings();
@@ -539,6 +541,10 @@ class FEMViewer {
 			.add(this.camera, "fov", 1, 180)
 			.name("Camera FOV")
 			.onChange(this.updateCamera.bind(this));
+		this.gui
+			.add(this, "draw_lines")
+			.onChange(this.updateLines.bind(this))
+			.name("Draw lines");
 
 		// ESTO ES SOLO PARA DESPLAZAMIENTOS ESPECIFICAMENTE
 		this.gui
@@ -622,49 +628,61 @@ class FEMViewer {
 				Ue.push(Array(e.coords.length).fill(0.0));
 			}
 
-			e.setGeometryCoords(
-				Ue,
-				this.magnif * this.mult,
-				this.bufferGeometries[i],
-				this.bufferLines[i]
-			);
-			let max_disp_nodes = 0.0;
-			for (const ue of e.Ue) {
-				max_disp_nodes = Math.max(
-					max_disp_nodes,
-					...ue.map((x) => Math.abs(x * this.mult))
+			if (this.draw_lines) {
+				e.setGeometryCoords(
+					Ue,
+					this.magnif * this.mult,
+					this.bufferGeometries[i],
+					this.bufferLines[i]
+				);
+			} else {
+				e.setGeometryCoords(
+					Ue,
+					this.magnif * this.mult,
+					this.bufferGeometries[i]
 				);
 			}
 
-			const color = new THREE.Color();
-			let amount = max_disp_nodes / this.max_disp;
-			amount = Math.min(amount, 1.0);
-			const hue = THREE.MathUtils.lerp(248 / 360, 184 / 360, amount);
-			const saturation = 1.0;
-			const lightness = 0.6;
-			color.setHSL(hue, saturation, lightness);
-			// get the colors as an array of values from 0 to 255
-			const rgb = color.toArray().map((v) => v * 255);
+			if (this.colors) {
+				let max_disp_nodes = 0.0;
+				for (const ue of e.Ue) {
+					max_disp_nodes = Math.max(
+						max_disp_nodes,
+						...ue.map((x) => Math.abs(x * this.mult))
+					);
+				}
 
-			// make an array to store colors for each vertex
-			const numVerts =
-				this.bufferGeometries[i].getAttribute("position").count;
-			const itemSize = 3; // r, g, b
-			const colors = new Uint8Array(itemSize * numVerts);
+				const color = new THREE.Color();
+				let amount = max_disp_nodes / this.max_disp;
+				amount = Math.min(amount, 1.0);
+				const hue = THREE.MathUtils.lerp(248 / 360, 184 / 360, amount);
+				const saturation = 1.0;
+				const lightness = 0.6;
+				color.setHSL(hue, saturation, lightness);
+				// get the colors as an array of values from 0 to 255
+				const rgb = color.toArray().map((v) => v * 255);
 
-			// copy the color into the colors array for each vertex
-			colors.forEach((v, ndx) => {
-				colors[ndx] = rgb[ndx % 3];
-			});
+				// make an array to store colors for each vertex
+				const numVerts =
+					this.bufferGeometries[i].getAttribute("position").count;
+				const itemSize = 3; // r, g, b
+				const colors = new Uint8Array(itemSize * numVerts);
 
-			const normalized = true;
-			const colorAttrib = new THREE.BufferAttribute(
-				colors,
-				itemSize,
-				normalized
-			);
-			this.bufferGeometries[i].setAttribute("color", colorAttrib);
+				// copy the color into the colors array for each vertex
+				colors.forEach((v, ndx) => {
+					colors[ndx] = rgb[ndx % 3];
+				});
+
+				const normalized = true;
+				const colorAttrib = new THREE.BufferAttribute(
+					colors,
+					itemSize,
+					normalized
+				);
+				this.bufferGeometries[i].setAttribute("color", colorAttrib);
+			}
 		}
+
 		this.mergedGeometry.dispose();
 		this.mergedGeometry = BufferGeometryUtils.mergeBufferGeometries(
 			this.bufferGeometries,
@@ -674,12 +692,14 @@ class FEMViewer {
 		this.mesh.material = this.material;
 		this.mesh.material.needsUpdate = true;
 
-		this.mergedLineGeometry.dispose();
-		this.mergedLineGeometry = BufferGeometryUtils.mergeBufferGeometries(
-			this.bufferLines,
-			false
-		);
-		this.contour.geometry = this.mergedLineGeometry;
+		if (this.draw_lines) {
+			this.mergedLineGeometry.dispose();
+			this.mergedLineGeometry = BufferGeometryUtils.mergeBufferGeometries(
+				this.bufferLines,
+				false
+			);
+			this.contour.geometry = this.mergedLineGeometry;
+		}
 
 		if (this.resizeRendererToDisplaySize()) {
 			const canvas = this.renderer.domElement;
@@ -723,6 +743,14 @@ class FEMViewer {
 		this.controls.update();
 	}
 
+	updateLines() {
+		if (this.draw_lines) {
+			this.model.add(this.contour);
+		} else {
+			this.model.remove(this.contour);
+		}
+	}
+
 	init() {
 		this.mergedGeometry = BufferGeometryUtils.mergeBufferGeometries(
 			this.bufferGeometries,
@@ -742,7 +770,7 @@ class FEMViewer {
 			true
 		);
 		this.contour = new THREE.Line(this.mergedLineGeometry, line_material);
-		this.model.add(this.contour);
+		// this.model.add(this.contour);
 
 		this.mesh = new THREE.Mesh(this.mergedGeometry, this.material);
 		this.model.add(this.mesh);
@@ -756,7 +784,15 @@ class FEMViewer {
 	}
 
 	parseJSON(jsondata) {
+		const norm = 1.0 / Math.max(...jsondata["nodes"].flat());
+		// console.log(norm);
 		this.nodes.push(...jsondata["nodes"]);
+		for (let i = 0; i < this.nodes.length; i++) {
+			const node = this.nodes[i];
+			for (let j = 0; j < node.length; j++) {
+				this.nodes[i][j] *= norm;
+			}
+		}
 		this.nvn = jsondata["nvn"];
 		for (let i = 0; i < this.nodes.length; i++) {
 			for (let j = 0; j <= 3 - this.nodes[i].length; j++) {
@@ -769,6 +805,11 @@ class FEMViewer {
 			this.solutions = [Array(this.nodes.length * this.nvn).fill(0.0)];
 		} else {
 			this.solutions.push(...jsondata["disp_field"]);
+		}
+		for (let s = 0; s < this.solutions.length; s++) {
+			for (let i = 0; i < this.solutions[s].length; i++) {
+				this.solutions[s][i] *= norm;
+			}
 		}
 		this.updateU();
 		this.size =
