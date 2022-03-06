@@ -21,6 +21,9 @@ const canvas = document.querySelector("#c");
 const O = new FEMViewer(canvas, magnif);
 await O.loadJSON(path);
 O.init();
+document.addEventListener("visibilitychange", (e) =>
+	O.handleVisibilityChange(e)
+);
 const nodoTexto = document.getElementById("textNodo");
 function onDocumentKeyDown(event) {
 	const keyCode = event.which;

@@ -577,6 +577,14 @@ class FEMViewer {
 		}
 	}
 
+	handleVisibilityChange(e) {
+		if (document.visibilityState === "hidden") {
+			this.clock.stop();
+		} else {
+			this.clock.start();
+		}
+	}
+
 	update() {
 		requestAnimationFrame(this.update.bind(this));
 		this.delta += this.clock.getDelta();
@@ -756,11 +764,7 @@ class FEMViewer {
 			this.bufferGeometries,
 			true
 		);
-		this.material = new THREE.MeshPhongMaterial({
-			color: "#c4bbfc",
-			emissive: "blue",
-			flatShading: true,
-		});
+		this.updateMaterial();
 		const line_material = new THREE.LineBasicMaterial({
 			color: "black",
 			linewidth: 3,
@@ -787,10 +791,13 @@ class FEMViewer {
 		const norm = 1.0 / Math.max(...jsondata["nodes"].flat());
 		// console.log(norm);
 		this.nodes.push(...jsondata["nodes"]);
+		this.size =
+			Math.max(...this.nodes.flat()) - Math.min(...this.nodes.flat());
 		for (let i = 0; i < this.nodes.length; i++) {
 			const node = this.nodes[i];
 			for (let j = 0; j < node.length; j++) {
 				this.nodes[i][j] *= norm;
+				this.nodes[i][j] -= this.size / 2;
 			}
 		}
 		this.nvn = jsondata["nvn"];
@@ -812,8 +819,6 @@ class FEMViewer {
 			}
 		}
 		this.updateU();
-		this.size =
-			Math.max(...this.nodes.flat()) - Math.min(...this.nodes.flat());
 		this.createElements();
 		this.createLines();
 	}
