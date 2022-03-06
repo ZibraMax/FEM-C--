@@ -10,7 +10,7 @@ class Element {
 		this.gdls = gdls;
 		this.Ue = [];
 	}
-	setUe(U) {
+	setUe(U, svs = false) {
 		this.Ue = [];
 		for (const v of this.gdls) {
 			const u = [];
@@ -19,6 +19,7 @@ class Element {
 			}
 			this.Ue.push(u);
 		}
+		if (svs) this.giveSecondVariableSolution();
 	}
 	setGeometryCoords(Ue, mult, parent_geometry, line_geometry) {
 		if (!Ue) {
@@ -78,6 +79,20 @@ class Element {
 			line_geometry.computeVertexNormals();
 		}
 	}
+	J(_z) {
+		const dpsis = math.transpose(this.dpsi(_z));
+		const j = math.multiply(dpsis, this.coords);
+		return [j, dpsis];
+	}
+	giveSecondVariableSolution() {
+		this.dus = [];
+		for (const z of this.domain) {
+			const [J, dpz] = this.J(z);
+			const _J = math.inv(J);
+			const dpx = math.multiply(_J, dpz);
+			this.dus.push(math.multiply(this.Ue, math.transpose(dpx)));
+		}
+	}
 }
 class Element3D extends Element {
 	constructor(coords, gdls) {
@@ -86,6 +101,31 @@ class Element3D extends Element {
 	isInside(x) {
 		return false;
 	}
+	postProcess(C, calculateStress) {
+		this.sigmas = [];
+		this.epsilons = [];
+		for (const du of this.dus) {
+			const exx = du[0][0];
+			const eyy = du[1][1];
+			const ezz = du[2][2];
+
+			const exy = (1 / 2) * (du[0][1] + du[1][0]);
+			const exz = (1 / 2) * (du[0][2] + du[2][0]);
+			const eyz = (1 / 2) * (du[1][2] + du[2][1]);
+			const epsilon = [exx, eyy, ezz, exy, exz, eyz];
+			this.epsilons.push(epsilon);
+			if (calculateStress) {
+				const sigma = math.multiply(C, epsilon);
+				this.sigmas.push(sigma);
+			}
+		}
+		this.epsilons = this.epsilons[0].map((_, colIndex) =>
+			this.epsilons.map((row) => row[colIndex])
+		);
+		this.sigmas = this.sigmas[0].map((_, colIndex) =>
+			this.sigmas.map((row) => row[colIndex])
+		);
+	}
 }
 
 class Brick extends Element3D {
@@ -93,6 +133,16 @@ class Brick extends Element3D {
 	line_order;
 	constructor(coords, gdls) {
 		super(coords, gdls);
+		this.domain = [
+			[-1, -1, 1],
+			[1, -1, 1],
+			[1, 1, 1],
+			[-1, 1, 1],
+			[-1, -1, -1],
+			[1, -1, -1],
+			[1, 1, -1],
+			[-1, 1, -1],
+		];
 		this.geometry = new THREE.BoxGeometry(1);
 		this.order = [
 			6, 2, 5, 1, 3, 7, 0, 4, 3, 2, 7, 6, 4, 5, 0, 1, 7, 6, 4, 5, 2, 3, 1,
@@ -127,9 +177,9 @@ class Brick extends Element3D {
 		];
 	}
 	psi(_z) {
-		z = _z[0];
-		n = _z[1];
-		g = _z[2];
+		const z = _z[0];
+		const n = _z[1];
+		const g = _z[2];
 		return [
 			(1.0 / 8.0) * (1 - z) * (1 - n) * (1 - g),
 			(1.0 / 8.0) * (1 + z) * (1 - n) * (1 - g),
@@ -142,9 +192,9 @@ class Brick extends Element3D {
 		];
 	}
 	dpsi(_z) {
-		x = _z[0];
-		y = _z[1];
-		z = _z[2];
+		const x = _z[0];
+		const y = _z[1];
+		const z = _z[2];
 		return [
 			[
 				(1.0 / 8.0) * (y - 1.0) * (1.0 - z),
@@ -195,6 +245,12 @@ class Tetrahedral extends Element3D {
 	line_order;
 	constructor(coords, gdls) {
 		super(coords, gdls);
+		this.domain = [
+			[0.0, 0.0, 0.0],
+			[1.0, 0.0, 0.0],
+			[0.0, 1.0, 0.0],
+			[0.0, 0.0, 1.0],
+		];
 		this.geometry = new THREE.TetrahedronGeometry(1);
 		this.order = [1, 0, 2, 3, 2, 0, 3, 0, 1, 3, 1, 2];
 		this.line_order = [0, 1, 2, 0, 3, 1, 3, 2];
@@ -214,10 +270,23 @@ class Tetrahedral extends Element3D {
 		];
 	}
 	psi(_z) {
-		return 0.0;
+		x = _z[0];
+		y = _z[1];
+		z = _z[2];
+		L1 = 1 - x - y - z;
+		L2 = x;
+		L3 = y;
+		L4 = z;
+		return [L1, L2, L3, L4];
 	}
 	dpsi(_z) {
-		return 0.0;
+		const kernell = 0.0;
+		return [
+			[-1.0 + kernell, -1.0 + kernell, -1.0 + kernell],
+			[1.0 + kernell, 0.0 + kernell, 0.0 + kernell],
+			[0.0 + kernell, 1.0 + kernell, 0.0 + kernell],
+			[0.0 + kernell, 0.0 + kernell, 1.0 + kernell],
+		];
 	}
 }
 

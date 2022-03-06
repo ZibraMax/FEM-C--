@@ -27,6 +27,12 @@ const types = {
 	C2V: Serendipity,
 };
 
+const functions = {
+	MAX: (x) => Math.max(...x),
+	MIN: (x) => Math.min(...x),
+	AVE: (x) => x.reduce((a, b) => a + b, 0) / x.length,
+};
+
 class FEMViewer {
 	json_path;
 	nodes;
@@ -59,7 +65,8 @@ class FEMViewer {
 		this.max_disp = 0.0;
 		this.size = 0.0;
 		this.elements = [];
-
+		this.calculateStress = false;
+		this.C = Array(6).fill(Array(6).fill(0.0));
 		// THREE JS
 		this.renderer = new THREE.WebGLRenderer({ canvas });
 		this.renderer.localClippingEnabled = true;
@@ -77,8 +84,20 @@ class FEMViewer {
 		this.max_disp = 0.0;
 		this.draw_lines = false;
 
+		this.mode = "MAX";
+		this.colorMode = "DISP";
+		this.secondVariable = 0;
+
 		this.gui = new GUI({ title: "Configuraciones" });
+		this.first_color = [78 / 255, 51 / 255, 255 / 255];
+		//248 / 360, 184 / 360
+		this.second_color = [255 / 255, 51 / 255, 51 / 255];
 		this.settings();
+	}
+
+	defineElasticityTensor(C) {
+		this.calculateStress = true;
+		this.C = C;
 	}
 
 	async loadJSON(json_path) {
@@ -134,8 +153,55 @@ class FEMViewer {
 			.add(this, "colors")
 			.name("Draw Colors")
 			.onChange(this.updateMaterial.bind(this));
+		this.gui
+			.add(this, "mode", { Max: "MAX", Min: "MIN", Average: "AVE" })
+			.name("Color mode");
+		this.gui
+			.add(this, "colorMode", {
+				Displacements: "DISP",
+				Stress: "STRESS",
+				Strain: "STRAIN",
+			})
+			.onChange(this.updateColorVariable.bind(this))
+			.name("Color variable");
+		this.gui
+			.add(this, "secondVariable", {
+				11: 0,
+				22: 1,
+				33: 2,
+				12: 3,
+				13: 4,
+				23: 5,
+			})
+			.onChange(this.updateColorVariable.bind(this))
+			.name("Second variable");
+
+		this.gui.addColor(this, "first_color");
+		this.gui.addColor(this, "second_color");
 		this.gui.add(this, "animate").name("Animation");
 		this.gui.add(this, "magnif", 0, 1000).name("Disp multiplier");
+	}
+	updateColorVariable() {
+		this.max_disp = 0.0;
+		if (this.colorMode == "DISP") {
+			this.max_disp = Math.max(...this.U);
+		} else if (this.colorMode == "STRESS") {
+			for (const e of this.elements) {
+				const variable = e.sigmas[this.secondVariable].map((x) =>
+					Math.abs(x)
+				);
+
+				this.max_disp = Math.max(this.max_disp, ...variable);
+			}
+		} else if (this.colorMode == "STRAIN") {
+			for (const e of this.elements) {
+				const variable = e.epsilons[this.secondVariable].map((x) =>
+					Math.abs(x)
+				);
+				this.max_disp = Math.max(this.max_disp, ...variable);
+			}
+		}
+		console.log("AAAAAA", this.max_disp);
 	}
 	updateCamera() {
 		this.camera.updateProjectionMatrix();
@@ -207,6 +273,8 @@ class FEMViewer {
 			this.mult = 1.0;
 		}
 
+		// console.log(this.mult);
+
 		// Specific part of shit
 
 		for (let i = 0; i < this.elements.length; i++) {
@@ -236,19 +304,33 @@ class FEMViewer {
 
 			if (this.colors) {
 				let max_disp_nodes = 0.0;
-				for (const ue of e.Ue) {
-					max_disp_nodes = Math.max(
-						max_disp_nodes,
-						...ue.map((x) => Math.abs(x * this.mult))
+				let variable = e.Ue;
+				if (this.colorMode == "STRESS") {
+					variable = e.sigmas;
+				} else if (this.colorMode == "STRAIN") {
+					variable = e.epsilons;
+				}
+				if (this.colorMode == "DISP") {
+					for (const ue of e.Ue) {
+						max_disp_nodes = Math.max(max_disp_nodes, ...ue);
+					}
+				} else {
+					max_disp_nodes = functions[this.mode](
+						variable[this.secondVariable].map((x) => x * this.mult)
 					);
 				}
 
 				const color = new THREE.Color();
+				const color1 = new THREE.Color(...this.first_color);
+				const color2 = new THREE.Color(...this.second_color);
+				const c1 = {};
+				color1.getHSL(c1);
+				const c2 = {};
+				color2.getHSL(c2);
 				let amount = max_disp_nodes / this.max_disp;
-				amount = Math.min(amount, 1.0);
-				const hue = THREE.MathUtils.lerp(248 / 360, 184 / 360, amount);
-				const saturation = 1.0;
-				const lightness = 0.6;
+				const hue = THREE.MathUtils.lerp(c1.h, c2.h, amount);
+				const saturation = THREE.MathUtils.lerp(c1.s, c2.s, amount);
+				const lightness = THREE.MathUtils.lerp(c1.l, c2.l, amount);
 				color.setHSL(hue, saturation, lightness);
 				// get the colors as an array of values from 0 to 255
 				const rgb = color.toArray().map((v) => v * 255);
@@ -343,6 +425,9 @@ class FEMViewer {
 	}
 
 	init() {
+		this.createElements();
+		this.createLines();
+		this.updateU();
 		this.mergedGeometry = BufferGeometryUtils.mergeBufferGeometries(
 			this.bufferGeometries,
 			true
@@ -383,7 +468,7 @@ class FEMViewer {
 		}
 		this.nvn = jsondata["nvn"];
 		for (let i = 0; i < this.nodes.length; i++) {
-			for (let j = 0; j <= 3 - this.nodes[i].length; j++) {
+			for (let j = this.nodes[i].length; j < 3; j++) {
 				this.nodes[i].push(0.0); //Coordinate completition
 			}
 		}
@@ -420,16 +505,16 @@ class FEMViewer {
 		}
 		this.size =
 			Math.max(...this.nodes.flat()) - Math.min(...this.nodes.flat());
-		this.updateU();
-		this.createElements();
-		this.createLines();
 	}
 
 	updateU() {
 		this.U = this.solutions[this.step];
-		this.max_disp = Math.max(...this.U);
+		this.updateColorVariable();
 		for (const e of this.elements) {
-			e.setUe(this.U);
+			e.setUe(this.U, this.calculateStress);
+			if (this.calculateStress) {
+				e.postProcess(this.C, this.calculateStress);
+			}
 		}
 	}
 
@@ -463,8 +548,6 @@ class FEMViewer {
 				egdls,
 				this.size
 			);
-			this.elements[i].setUe(this.U);
-			this.elements[i].setGeometryCoords();
 			this.bufferGeometries.push(this.elements[i].geometry);
 		}
 	}
