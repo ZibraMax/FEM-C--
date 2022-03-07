@@ -93,6 +93,30 @@ class Element {
 			this.dus.push(math.multiply(this.Ue, math.transpose(dpx)));
 		}
 	}
+	setMaxDispNode(f, colorMode, secondVariable) {
+		this.max_disp_nodes = 0.0;
+		let max_disp_nodes = 0.0;
+		let variable = this.Ue;
+		if (colorMode == "STRESS") {
+			variable = this.sigmas;
+		} else if (colorMode == "STRAIN") {
+			variable = this.epsilons;
+		}
+		if (colorMode == "DISP") {
+			const mag_disp_nodes = Array(this.coords.length).fill(0.0);
+			for (let i = 0; i < this.coords.length; i++) {
+				const ux = this.Ue[0][i];
+				const uy = this.Ue[1][i];
+				const uz = this.Ue[2][i];
+				const mag = (ux ** 2 + uy ** 2 + uz ** 2) ** 0.5;
+				mag_disp_nodes[i] = mag;
+			}
+			max_disp_nodes = f(mag_disp_nodes);
+		} else {
+			max_disp_nodes = f(variable[secondVariable]);
+		}
+		this.max_disp_nodes = max_disp_nodes;
+	}
 }
 class Element3D extends Element {
 	constructor(coords, gdls) {
