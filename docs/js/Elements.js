@@ -104,12 +104,13 @@ class Element {
 		}
 		if (colorMode == "DISP") {
 			const mag_disp_nodes = Array(this.coords.length).fill(0.0);
-			for (let i = 0; i < this.coords.length; i++) {
-				const ux = this.Ue[0][i];
-				const uy = this.Ue[1][i];
-				const uz = this.Ue[2][i];
-				const mag = (ux ** 2 + uy ** 2 + uz ** 2) ** 0.5;
-				mag_disp_nodes[i] = mag;
+			for (let j = 0; j < this.Ue[0].length; j++) {
+				let sum = 0.0;
+				for (let i = 0; i < this.Ue.length; i++) {
+					sum += this.Ue[i][j] ** 2;
+				}
+				const mag = sum ** 0.5;
+				mag_disp_nodes[j] = mag;
 			}
 			max_disp_nodes = f(mag_disp_nodes);
 		} else {

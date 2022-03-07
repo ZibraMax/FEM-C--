@@ -192,7 +192,6 @@ class FEMViewer {
 				this.secondVariable
 			);
 		}
-		console.log(this.elements[0].max_disp_nodes);
 
 		this.max_disp = 0.0;
 		if (this.colorMode == "DISP") {
