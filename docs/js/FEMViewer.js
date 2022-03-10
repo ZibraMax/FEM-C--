@@ -187,11 +187,7 @@ class FEMViewer {
 	}
 	updateColorVariable() {
 		for (const e of this.elements) {
-			e.setMaxDispNode(
-				functions[this.mode],
-				this.colorMode,
-				this.secondVariable
-			);
+			e.setMaxDispNode(this.colorMode, this.secondVariable);
 		}
 
 		this.max_disp = 0.0;
@@ -577,12 +573,20 @@ class FEMViewer {
 		const intersects = raycaster.intersectObjects(
 			this.invisibleModel.children
 		);
-		for (const e of intersects) {
-			const index = e.object.userData.elementId;
-			this.elements[index].colors = this.elements[index].colors.map(
-				(x) => 0
-			);
-			console.log(e.object);
+		// for (const e of intersects) {
+		// 	const index = e.object.userData.elementId;
+		// 	this.elements[index].colors = this.elements[index].colors.map(
+		// 		(x) => 0
+		// 	);
+		// }
+		if (intersects.length > 0) {
+			const keleven = intersects[0].object.userData.elementId;
+			console.log(keleven);
+			console.log(this.elements[keleven]);
+			const e = this.elements[keleven];
+			for (let j = 0; j < e.coords.length; j++) {
+				console.log(e.inverseMapping(e.coords[j]));
+			}
 		}
 	}
 }

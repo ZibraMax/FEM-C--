@@ -19,6 +19,7 @@ class Element {
 			}
 			this.Ue.push(u);
 		}
+
 		if (svs) this.giveSecondVariableSolution();
 	}
 	setGeometryCoords(Ue, mult, parent_geometry, line_geometry) {
@@ -84,6 +85,24 @@ class Element {
 		const j = math.multiply(dpsis, this.coords);
 		return [j, dpsis];
 	}
+	T(_z) {
+		let p = this.psi(_z);
+		return [math.multiply(p, this.coords), p];
+	}
+	inverseMapping(x0) {
+		let zi = [0.15, 0.15, 0.15];
+		for (let i = 0; i < 100; i++) {
+			const xi = math.add(x0, math.multiply(this.T(zi)[0], -1));
+			const [J, dpz] = this.J(zi);
+			const _J = math.inv(J);
+			const dz = math.multiply(_J, xi);
+			zi = math.add(zi, dz);
+			if (math.sum(math.abs(dz)) < 0.0000001) {
+				return zi;
+			}
+		}
+		return zi;
+	}
 	giveSecondVariableSolution() {
 		this.dus = [];
 		for (const z of this.domain) {
@@ -93,31 +112,14 @@ class Element {
 			this.dus.push(math.multiply(this.Ue, math.transpose(dpx)));
 		}
 	}
-	setMaxDispNode(f, colorMode, secondVariable) {
+	setMaxDispNode(colorMode, secondVariable) {
 		this.colors = Array(this.order.length).fill(0.0);
-		this.max_disp_nodes = 0.0;
-		let max_disp_nodes = 0.0;
 		let variable = this.Ue;
 		if (colorMode == "STRESS") {
 			variable = this.sigmas;
 		} else if (colorMode == "STRAIN") {
 			variable = this.epsilons;
 		}
-		if (colorMode == "DISP") {
-			const mag_disp_nodes = Array(this.coords.length).fill(0.0);
-			for (let j = 0; j < this.Ue[0].length; j++) {
-				let sum = 0.0;
-				for (let i = 0; i < this.Ue.length; i++) {
-					sum += this.Ue[i][j] ** 2;
-				}
-				const mag = sum ** 0.5;
-				mag_disp_nodes[j] = mag;
-			}
-			max_disp_nodes = f(mag_disp_nodes);
-		} else {
-			max_disp_nodes = f(variable[secondVariable]);
-		}
-		this.max_disp_nodes = max_disp_nodes;
 		for (let i = 0; i < this.order.length; i++) {
 			const gdl = this.order[i];
 			this.colors[i] = variable[secondVariable][gdl];
@@ -164,14 +166,14 @@ class Brick extends Element3D {
 	constructor(coords, gdls) {
 		super(coords, gdls);
 		this.domain = [
-			[-1, -1, 1],
-			[1, -1, 1],
-			[1, 1, 1],
-			[-1, 1, 1],
 			[-1, -1, -1],
 			[1, -1, -1],
 			[1, 1, -1],
 			[-1, 1, -1],
+			[-1, -1, 1],
+			[1, -1, 1],
+			[1, 1, 1],
+			[-1, 1, 1],
 		];
 		this.geometry = new THREE.BoxGeometry(1);
 		this.order = [
@@ -300,13 +302,13 @@ class Tetrahedral extends Element3D {
 		];
 	}
 	psi(_z) {
-		x = _z[0];
-		y = _z[1];
-		z = _z[2];
-		L1 = 1 - x - y - z;
-		L2 = x;
-		L3 = y;
-		L4 = z;
+		let x = _z[0];
+		let y = _z[1];
+		let z = _z[2];
+		let L1 = 1 - x - y - z;
+		let L2 = x;
+		let L3 = y;
+		let L4 = z;
 		return [L1, L2, L3, L4];
 	}
 	dpsi(_z) {

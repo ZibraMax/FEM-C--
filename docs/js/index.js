@@ -1,4 +1,5 @@
 import { FEMViewer } from "./FEMViewer.js";
+import { Brick } from "./Elements.js";
 
 let path_str = "SPHERE_FERNANDO";
 let magnif = 100;
@@ -74,3 +75,44 @@ br.addEventListener(
 	false
 );
 canvas.addEventListener("mousedown", O.onDocumentMouseDown.bind(O));
+import * as THREE from "../build/three.module.js";
+
+const geo = new THREE.BoxGeometry(1);
+geo.scale(2, 2, 2);
+const b = new Brick(
+	[
+		[-1.0, -1.0, -1.0],
+		[1.0, -1.0, -1.0],
+		[1.0, 1.0, -1.0],
+		[-1.0, 1.0, -1.0],
+		[-1.0, -1.0, 1.0],
+		[1.0, -1.0, 1.0],
+		[1.0, 1.0, 1.0],
+		[-1.0, 1.0, 1.0],
+	],
+	[
+		[-1, -1, -1, -1, -1, -1, -1, -1],
+		[-1, -1, -1, -1, -1, -1, -1, -1],
+		[-1, -1, -1, -1, -1, -1, -1, -1],
+	]
+);
+const a = [];
+for (let i = 0; i < geo.attributes.position.array.length; i += 3) {
+	const x = geo.attributes.position.array[i];
+	const y = geo.attributes.position.array[i + 1];
+	const z = geo.attributes.position.array[i + 2];
+	const real = [x, y, z];
+	for (let j = 0; j < b.coords.length; j++) {
+		const coord = b.coords[j];
+		const test = math.add(coord, math.multiply(real, -1));
+		if (math.sum(math.abs(test)) < 0.1) {
+			console.log(i, j, test);
+			a.push(j);
+		}
+	}
+	// geo.attributes.position.setXYZ(0, ...[2, 3, 4]);
+	// geo.attributes.position.setXYZ(1, ...[2, 3, 4]);
+	// geo.attributes.position.setXYZ(1, ...[2, 3, 4]);
+}
+console.log(geo, geo.attributes.position.count);
+console.log(a);
