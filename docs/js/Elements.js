@@ -94,6 +94,7 @@ class Element {
 		}
 	}
 	setMaxDispNode(f, colorMode, secondVariable) {
+		this.colors = Array(this.order.length).fill(0.0);
 		this.max_disp_nodes = 0.0;
 		let max_disp_nodes = 0.0;
 		let variable = this.Ue;
@@ -117,6 +118,10 @@ class Element {
 			max_disp_nodes = f(variable[secondVariable]);
 		}
 		this.max_disp_nodes = max_disp_nodes;
+		for (let i = 0; i < this.order.length; i++) {
+			const gdl = this.order[i];
+			this.colors[i] = variable[secondVariable][gdl];
+		}
 	}
 }
 class Element3D extends Element {

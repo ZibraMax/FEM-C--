@@ -73,3 +73,4 @@ br.addEventListener(
 	},
 	false
 );
+canvas.addEventListener("mousedown", O.onDocumentMouseDown.bind(O));

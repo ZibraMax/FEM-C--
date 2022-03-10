@@ -3,6 +3,7 @@ import GUI from "https://cdn.jsdelivr.net/npm/lil-gui@0.16/+esm";
 import { OrbitControls } from "./OrbitControls.js";
 import * as BufferGeometryUtils from "./BufferGeometryUtils.js";
 import { AxisGridHelper } from "./minigui.js";
+import { Lut } from "./Lut.js";
 import {
 	Brick,
 	BrickO2,
@@ -68,14 +69,16 @@ class FEMViewer {
 		this.calculateStress = false;
 		this.C = Array(6).fill(Array(6).fill(0.0));
 		// THREE JS
-		this.renderer = new THREE.WebGLRenderer({ canvas });
-		this.renderer.localClippingEnabled = true;
+		this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+		this.renderer.autoClear = false;
+
 		this.delta = 0;
 		this.interval = 1 / 120;
 		this.clock = new THREE.Clock();
 		this.bufferGeometries = [];
 		this.bufferLines = [];
 		this.model = new THREE.Object3D();
+		this.invisibleModel = new THREE.Object3D();
 		this.colors = false;
 		this.animate = true;
 		this.magnif = magnif;
@@ -88,6 +91,7 @@ class FEMViewer {
 		this.colorMode = "DISP";
 		this.secondVariable = 0;
 		this.dinamycColors = false;
+		this.lut = new Lut();
 
 		this.gui = new GUI({ title: "Configuraciones" });
 		this.first_color = [78 / 255, 51 / 255, 255 / 255];
@@ -110,6 +114,9 @@ class FEMViewer {
 
 	settings() {
 		THREE.Object3D.DefaultUp = new THREE.Vector3(0, 0, 1);
+		// Scene settings
+		this.scene = new THREE.Scene();
+		this.scene.background = new THREE.Color(1, 1, 1);
 		// Camera settings
 		const fov = 40;
 		const aspect = 2; // the canvas default
@@ -118,10 +125,7 @@ class FEMViewer {
 		this.camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
 		this.camera.position.set(25, 25, 25);
 		this.camera.lookAt(0, 0, 0);
-
-		// Scene settings
-		this.scene = new THREE.Scene();
-		this.scene.background = new THREE.Color(1, 1, 1);
+		this.scene.add(this.camera);
 
 		// Controls
 		this.controls = new OrbitControls(this.camera, this.canvas);
@@ -131,13 +135,10 @@ class FEMViewer {
 		// Lights
 		this.light2 = new THREE.AmbientLight(0xffffff, 0.0);
 		const color = 0xffffff;
-		const intensity = 1;
-		this.light = new THREE.DirectionalLight(color, intensity);
-		this.light.position.set(0, 0, 10);
-		this.light.target.position.set(-5, 0, 0);
-		this.scene.add(this.light);
+		const intensity = 0.8;
+		this.light = new THREE.PointLight(color, intensity);
+		this.camera.add(this.light);
 		this.scene.add(this.light2);
-		this.scene.add(this.light.target);
 
 		// GUI
 		this.gui
@@ -212,6 +213,8 @@ class FEMViewer {
 				this.max_disp = Math.max(this.max_disp, ...variable);
 			}
 		}
+		this.lut.setMax(this.max_disp);
+		this.lut.setMin(-this.max_disp);
 	}
 	updateCamera() {
 		this.camera.updateProjectionMatrix();
@@ -219,17 +222,15 @@ class FEMViewer {
 
 	updateMaterial() {
 		if (this.colors) {
-			this.material = new THREE.MeshPhongMaterial({
-				flatShading: true,
+			this.material = new THREE.MeshLambertMaterial({
 				vertexColors: true,
 			});
 			this.light2.intensity = 1.0;
 			this.light.intensity = 0.0;
 		} else {
-			this.material = new THREE.MeshPhongMaterial({
+			this.material = new THREE.MeshLambertMaterial({
 				color: "#c4bbfc",
 				emissive: "blue",
-				flatShading: true,
 			});
 			this.light2.intensity = 0.0;
 			this.light.intensity = 1.0;
@@ -315,14 +316,6 @@ class FEMViewer {
 			}
 			if (this.colors) {
 				let max_disp_nodes = e.max_disp_nodes;
-
-				const color = new THREE.Color();
-				const color1 = new THREE.Color(...this.first_color);
-				const color2 = new THREE.Color(...this.second_color);
-				const c1 = {};
-				color1.getHSL(c1);
-				const c2 = {};
-				color2.getHSL(c2);
 				let amount = max_disp_nodes / this.max_disp;
 				if (this.colorMode == "DISP") {
 					amount *= !this.dinamycColors ? 1 : Math.abs(this.mult);
@@ -333,31 +326,12 @@ class FEMViewer {
 					amount += 1.0;
 					amount /= 2;
 				}
-				const hue = THREE.MathUtils.lerp(c1.h, c2.h, amount);
-				const saturation = THREE.MathUtils.lerp(c1.s, c2.s, amount);
-				const lightness = THREE.MathUtils.lerp(c1.l, c2.l, amount);
-				color.setHSL(hue, saturation, lightness);
-				// get the colors as an array of values from 0 to 255
-				const rgb = color.toArray().map((v) => v * 255);
-
-				// make an array to store colors for each vertex
-				const numVerts =
-					this.bufferGeometries[i].getAttribute("position").count;
-				const itemSize = 3; // r, g, b
-				const colors = new Uint8Array(itemSize * numVerts);
-
-				// copy the color into the colors array for each vertex
-				colors.forEach((v, ndx) => {
-					colors[ndx] = rgb[ndx % 3];
-				});
-
-				const normalized = true;
-				const colorAttrib = new THREE.BufferAttribute(
-					colors,
-					itemSize,
-					normalized
-				);
-				this.bufferGeometries[i].setAttribute("color", colorAttrib);
+				const colors = this.bufferGeometries[i].attributes.color;
+				for (let j = 0; j < e.order.length; j++) {
+					let disp = e.colors[j];
+					const color = this.lut.getColor(disp);
+					colors.setXYZ(j, color.r, color.g, color.b);
+				}
 			}
 		}
 
@@ -423,9 +397,9 @@ class FEMViewer {
 
 	updateLines() {
 		if (this.draw_lines) {
-			this.model.add(this.contour);
+			this.scene.add(this.contour);
 		} else {
-			this.model.remove(this.contour);
+			this.scene.remove(this.contour);
 		}
 	}
 
@@ -452,9 +426,11 @@ class FEMViewer {
 
 		this.mesh = new THREE.Mesh(this.mergedGeometry, this.material);
 		this.model.add(this.mesh);
-		new AxisGridHelper(this.model, 0);
+
+		new AxisGridHelper(this.scene, 0);
 
 		this.scene.add(this.model);
+		this.scene.add(this.invisibleModel);
 		this.renderer.render(this.scene, this.camera);
 		this.zoomExtents();
 		window.addEventListener("resize", this.render.bind(this));
@@ -554,7 +530,27 @@ class FEMViewer {
 				egdls,
 				this.size
 			);
+			const colors = [];
+			for (
+				let j = 0;
+				j < this.elements[i].geometry.attributes.position.count;
+				++j
+			) {
+				colors.push(1, 1, 1);
+			}
+
+			this.elements[i].geometry.setAttribute(
+				"color",
+				new THREE.Float32BufferAttribute(colors, 3)
+			);
 			this.bufferGeometries.push(this.elements[i].geometry);
+			const messh = new THREE.Mesh(
+				this.elements[i].geometry,
+				this.material
+			);
+			messh.visible = false;
+			messh.userData = { elementId: i };
+			this.invisibleModel.add(messh);
 		}
 	}
 	createLines() {
@@ -568,6 +564,25 @@ class FEMViewer {
 			}
 			const line_geo = new THREE.BufferGeometry().setFromPoints(points);
 			this.bufferLines.push(line_geo);
+		}
+	}
+	onDocumentMouseDown(event) {
+		event.preventDefault();
+		const mouse3D = new THREE.Vector2(
+			(event.clientX / window.innerWidth) * 2 - 1,
+			-(event.clientY / window.innerHeight) * 2 + 1
+		);
+		const raycaster = new THREE.Raycaster();
+		raycaster.setFromCamera(mouse3D, this.camera);
+		const intersects = raycaster.intersectObjects(
+			this.invisibleModel.children
+		);
+		for (const e of intersects) {
+			const index = e.object.userData.elementId;
+			this.elements[index].colors = this.elements[index].colors.map(
+				(x) => 0
+			);
+			console.log(e.object);
 		}
 	}
 }
