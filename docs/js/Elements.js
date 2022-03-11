@@ -114,7 +114,7 @@ class Element {
 	}
 	setMaxDispNode(colorMode, secondVariable) {
 		this.colors = Array(this.order.length).fill(0.0);
-		let variable = this.Ue;
+		let variable = math.transpose(this.Ue);
 		if (colorMode == "STRESS") {
 			variable = this.sigmas;
 		} else if (colorMode == "STRAIN") {
@@ -122,7 +122,7 @@ class Element {
 		}
 		for (let i = 0; i < this.order.length; i++) {
 			const gdl = this.order[i];
-			this.colors[i] = variable[secondVariable][gdl];
+			this.colors[i] = variable[gdl][secondVariable];
 		}
 	}
 }
@@ -141,9 +141,9 @@ class Element3D extends Element {
 			const eyy = du[1][1];
 			const ezz = du[2][2];
 
-			const exy = (1 / 2) * (du[0][1] + du[1][0]);
-			const exz = (1 / 2) * (du[0][2] + du[2][0]);
-			const eyz = (1 / 2) * (du[1][2] + du[2][1]);
+			const exy = du[0][1] + du[1][0];
+			const exz = du[0][2] + du[2][0];
+			const eyz = du[1][2] + du[2][1];
 			const epsilon = [exx, eyy, ezz, exy, exz, eyz];
 			this.epsilons.push(epsilon);
 			if (calculateStress) {
@@ -151,12 +151,6 @@ class Element3D extends Element {
 				this.sigmas.push(sigma);
 			}
 		}
-		this.epsilons = this.epsilons[0].map((_, colIndex) =>
-			this.epsilons.map((row) => row[colIndex])
-		);
-		this.sigmas = this.sigmas[0].map((_, colIndex) =>
-			this.sigmas.map((row) => row[colIndex])
-		);
 	}
 }
 
@@ -229,44 +223,44 @@ class Brick extends Element3D {
 		const z = _z[2];
 		return [
 			[
-				(1.0 / 8.0) * (y - 1.0) * (1.0 - z),
-				(1.0 / 8.0) * (x - 1) * (1 - z),
-				-(1.0 / 8.0) * (1 - x) * (1 - y),
+				0.125 * (1 - z) * (y - 1),
+				0.125 * (1 - z) * (x - 1),
+				-0.125 * (1 - x) * (1 - y),
 			],
 			[
-				(1.0 / 8.0) * (1 - y) * (1 - z),
-				(1.0 / 8.0) * (-1 - x) * (1 - z),
-				-(1.0 / 8.0) * (1 + x) * (1 - y),
+				0.125 * (1 - y) * (1 - z),
+				0.125 * (1 - z) * (-x - 1),
+				-0.125 * (1 - y) * (x + 1),
 			],
 			[
-				(1.0 / 8.0) * (1 + y) * (1 - z),
-				(1.0 / 8.0) * (1 + x) * (1 - z),
-				-(1.0 / 8.0) * (1 + x) * (1 + y),
+				0.125 * (1 - z) * (y + 1),
+				0.125 * (1 - z) * (x + 1),
+				-0.125 * (x + 1) * (y + 1),
 			],
 			[
-				(1.0 / 8.0) * (-1.0 - y) * (1 - z),
-				(1.0 / 8.0) * (1 - x) * (1 - z),
-				-(1.0 / 8.0) * (1 - x) * (1 + y),
+				0.125 * (1 - z) * (-y - 1),
+				0.125 * (1 - x) * (1 - z),
+				-0.125 * (1 - x) * (y + 1),
 			],
 			[
-				(1.0 / 8.0) * (1 - y) * (-1 - z),
-				-(1.0 / 8.0) * (1 - x) * (1 + z),
-				(1.0 / 8.0) * (1 - x) * (1 - y),
+				0.125 * (1 - y) * (-z - 1),
+				-0.125 * (1 - x) * (z + 1),
+				0.125 * (1 - x) * (1 - y),
 			],
 			[
-				(1.0 / 8.0) * (1 - y) * (1 + z),
-				-(1.0 / 8.0) * (1 + x) * (1 + z),
-				(1.0 / 8.0) * (1 + x) * (1 - y),
+				0.125 * (1 - y) * (z + 1),
+				-0.125 * (x + 1) * (z + 1),
+				0.125 * (1 - y) * (x + 1),
 			],
 			[
-				(1.0 / 8.0) * (1 + y) * (1 + z),
-				(1.0 / 8.0) * (1 + x) * (1 + z),
-				(1.0 / 8.0) * (1 + x) * (1 + y),
+				0.125 * (y + 1) * (z + 1),
+				0.125 * (x + 1) * (z + 1),
+				0.125 * (x + 1) * (y + 1),
 			],
 			[
-				-(1.0 / 8.0) * (1 + y) * (1 + z),
-				(1.0 / 8.0) * (1 - x) * (1 + z),
-				(1.0 / 8.0) * (1 - x) * (1 + y),
+				-0.125 * (y + 1) * (z + 1),
+				0.125 * (1 - x) * (z + 1),
+				0.125 * (1 - x) * (y + 1),
 			],
 		];
 	}
