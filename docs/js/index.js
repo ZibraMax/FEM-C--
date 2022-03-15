@@ -21,8 +21,10 @@ if (queryString != "") {
 		Cs = cs.split(",").map((x) => parseFloat(x));
 	}
 }
-
-const path = `./resources/${path_str}.json`;
+let path = `./resources/${path_str}.json`;
+if (path_str.startsWith("https://")) {
+	path = path_str;
+}
 const canvas = document.querySelector("#c");
 const O = new FEMViewer(canvas, magnif);
 await O.loadJSON(path);
