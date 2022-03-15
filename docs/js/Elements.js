@@ -144,7 +144,7 @@ class Element3D extends Element {
 			const exy = du[0][1] + du[1][0];
 			const exz = du[0][2] + du[2][0];
 			const eyz = du[1][2] + du[2][1];
-			const epsilon = [exx, eyy, ezz, exy, exz, eyz];
+			const epsilon = [exx, eyy, ezz, exz, eyz, exy];
 			this.epsilons.push(epsilon);
 			if (calculateStress) {
 				const sigma = math.multiply(C, epsilon);

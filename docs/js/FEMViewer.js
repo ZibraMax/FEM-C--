@@ -190,27 +190,29 @@ class FEMViewer {
 			e.setMaxDispNode(this.colorMode, this.secondVariable);
 		}
 
-		this.max_disp = 0.0;
+		let max_disp = 0.0;
+		let min_disp = 9999999999999;
 		if (this.colorMode == "DISP") {
-			this.max_disp = Math.max(...this.U.map((x) => Math.abs(x)));
+			const variable = this.U.flat();
+			max_disp = Math.max(max_disp, ...variable);
+			min_disp = Math.min(min_disp, ...variable);
 		} else if (this.colorMode == "STRESS") {
 			for (const e of this.elements) {
-				const variable = e.sigmas[this.secondVariable].map((x) =>
-					Math.abs(x)
-				);
-
-				this.max_disp = Math.max(this.max_disp, ...variable);
+				const variable = e.colors;
+				max_disp = Math.max(max_disp, ...variable);
+				min_disp = Math.min(min_disp, ...variable);
 			}
 		} else if (this.colorMode == "STRAIN") {
 			for (const e of this.elements) {
-				const variable = e.epsilons[this.secondVariable].map((x) =>
-					Math.abs(x)
-				);
-				this.max_disp = Math.max(this.max_disp, ...variable);
+				const variable = e.colors;
+				max_disp = Math.max(max_disp, ...variable);
+				min_disp = Math.min(min_disp, ...variable);
 			}
 		}
-		this.lut.setMax(this.max_disp);
-		this.lut.setMin(-this.max_disp);
+		this.max_disp = this.max_disp;
+		this.lut.setMax(max_disp);
+		this.lut.setMin(min_disp);
+		console.log(max_disp, min_disp);
 	}
 	updateCamera() {
 		this.camera.updateProjectionMatrix();
@@ -582,11 +584,8 @@ class FEMViewer {
 		if (intersects.length > 0) {
 			const keleven = intersects[0].object.userData.elementId;
 			console.log(keleven);
-			console.log(this.elements[keleven]);
 			const e = this.elements[keleven];
-			for (let j = 0; j < e.coords.length; j++) {
-				console.log(e.inverseMapping(e.coords[j]));
-			}
+			console.log(e);
 		}
 	}
 }
