@@ -1,4 +1,5 @@
 {
 	"cmake.generator": "MinGW Makefiles",
-	"liveServer.settings.port": 5501
+	"liveServer.settings.port": 5501,
+	"cmake.cmakePath": "C:/msys64/mingw64/bin/cmake.exe"
 }
